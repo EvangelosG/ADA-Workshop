@@ -59,7 +59,7 @@ Devin Local — the only agent in Desktop since 3.9.19.
 - A folder with a `SKILL.md` — plus checklists, tables, templates
 - Project: `.agents/skills/<name>/` — committed with the repo
 - Global: `~/.config/devin/skills/<name>/` — your machine only
-- Frontmatter: `name` + `description`
+- Frontmatter: give it a `name` and, above all, a `description`
 - Fires **automatically** on a matching request, or `/name` explicitly
 
 ```markdown
@@ -90,7 +90,7 @@ Consequences:
 
 | | Loaded | Use for |
 | --- | --- | --- |
-| **Rule** (`AGENTS.md`) | always, relevant or not | short, universal constraints |
+| **Rule** (`AGENTS.md`) | always-on project guidance | short, universal constraints |
 | **Skill** | on demand, when relevant | procedures with judgement + resources |
 
 A migration method is a skill: it is long, it is conditional, it carries
@@ -211,6 +211,7 @@ Gates, worded with no escape hatch:
 - never translate a fixed point or integer type to floating point
 - never drop a run-time constraint check
 - never hard-code fixtures or expected output into the program
+- never wrap, link to or shell out to the Ada program to pass a case
 - if it cannot be translated faithfully — **stop and report**
 
 Plus `reference/idiom-map.md` and `checklists/per-package.md`.
@@ -229,7 +230,7 @@ Split it by scope:
 | When | Gate |
 | --- | --- |
 | after each package | builds clean · nothing that passed now fails |
-| dependency closure complete | full parity suite green before continuing |
+| dependency closure complete | fixing red cases is the *only* work allowed |
 | completion | never report done while any case fails |
 
 You find this by **running** the skill, not by reading it.
@@ -340,15 +341,22 @@ Every gate so far is prose: it holds because the model agrees with you.
 
 ```yaml
 permissions:
-  deny:
-    - Write(golden/**)
-    - Write(ada/**)
+  deny:  [Write(golden/**), Write(ada/**)]
+  ask:   [Write(cpp/tests/**)]
 ```
 
-Re-run probe 1: the write is refused **whether or not** the model agrees.
+Re-run probe 1 — explicitly, `/ada-to-cpp-migration` — and the write is
+refused **whether or not** the model agrees.
 
-And notice what cannot be enforced this way — "do not map fixed point to
-`double`" is a judgement about meaning. No permission expresses it.
+<div class="small">
+
+Three layers, not two: prose rule → tool-level guardrail → OS isolation.
+`deny` is the middle one; shell side effects are governed separately.
+
+</div>
+
+And "do not map fixed point to `double`" fits none of them — it is a
+judgement about meaning.
 
 > Enforce what the platform can enforce. Reserve prose for judgement.
 

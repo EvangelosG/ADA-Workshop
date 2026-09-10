@@ -107,6 +107,33 @@ def test_gate_prompt_separates_per_package_from_completion(page: str) -> None:
     assert "has started failing" in page
 
 
+def test_lab_closes_the_delegate_to_ada_loophole(page: str) -> None:
+    """A C++ shim around the Ada binary passes every case and migrates nothing.
+
+    Nothing in the fixture or golden gates rules it out, so it needs its own.
+    """
+    assert "shelling out to the Ada program" in page
+
+
+def test_golden_verification_never_rewrites_the_goldens() -> None:
+    """The skill denies writes to golden/, so its verification step must not
+    depend on regenerating them in place.
+    """
+    makefile = (ROOT / "ada" / "Makefile").read_text(encoding="utf-8")
+    assert "check-golden:" in makefile
+
+    lab = build_lab.SOURCE.read_text(encoding="utf-8")
+    assert "make -C ada check-golden" in lab
+    assert "make -C ada golden" not in lab
+
+
+def test_warnings_as_errors_is_real_where_it_is_claimed() -> None:
+    """Either the build enforces it or the material must not promise it."""
+    cmake = (ROOT / "cpp" / "CMakeLists.txt").read_text(encoding="utf-8")
+    assert "PARITY_WERROR" in cmake
+    assert "-Werror" in cmake and "/WX" in cmake
+
+
 def test_lab_teaches_enforced_as_well_as_prose_gates(page: str) -> None:
     assert "permissions:" in page
     assert "Write(golden/**)" in page

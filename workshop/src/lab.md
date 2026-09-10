@@ -33,7 +33,10 @@ git clone https://github.com/EvangelosG/ADA-Workshop
 Optional — you do **not** need Ada installed, the reference outputs are
 committed. But if you want to build and run the Ada program yourself: install
 GNAT (Ubuntu `sudo apt-get install gnat`; macOS/Windows via
-[Alire](https://alire.ada.dev)), then `make -C ada run`.
+[Alire](https://alire.ada.dev)), then `make -C ada run`. `make -C ada
+check-golden` re-runs the reference program and *compares* its output with
+`golden/` without touching either — that is the verification a migration is
+allowed to do; rewriting the goldens is not.
 
 ### Verify your setup
 
@@ -95,7 +98,9 @@ codebase, the number of cases is a decision you make deliberately.
   `.agents/skills/<name>/`, `.devin/skills/<name>/` or
   `.windsurf/skills/<name>/` and are committed with the repo; global skills
   live under `~/.config/devin/skills/<name>/`. We use `.agents/skills/`.
-- Frontmatter needs `name` and `description`.
+- Frontmatter is YAML. Give yours an explicit `name` and a `description` —
+  the description is what makes the skill findable, so it is the one field
+  worth agonising over.
 - **Progressive disclosure:** only `name` and `description` are in context
   until the skill fires. That is why the description is written as *when to
   invoke me*, not *what I contain*.
@@ -106,10 +111,10 @@ codebase, the number of cases is a decision you make deliberately.
 - Supporting files in the folder (checklists, reference tables, templates)
   become available once the skill is invoked. Put the bulk there and keep
   `SKILL.md` short.
-- **Skill vs rule:** a rule (`AGENTS.md`, or files under `.devin/rules/`) is
-  context that applies whether or not it is relevant; a skill is loaded on
-  demand and can carry supporting files. Short behavioural constraints are
-  rules. A migration procedure is a skill.
+- **Skill vs rule:** `AGENTS.md` is always-on project guidance, and rules can
+  be configured with other activation behaviours; a skill is procedural
+  context loaded on demand, and it brings supporting files with it. Short
+  universal constraints are rules. A migration procedure is a skill.
 - Frontmatter can also *enforce*, not just instruct: `allowed-tools` narrows
   the toolset and `permissions` allows, denies or prompts on specific scopes.
   We use that in step 5.
@@ -166,9 +171,9 @@ Requirements for the skill:
   migration already in progress.
 - A preconditions section: trusted reference outputs exist in golden/ and
   their provenance is known; the parity suite runs and currently fails for the
-  right reason. If the Ada toolchain happens to be installed, regenerating the
-  goldens must reproduce them byte for byte; if it is not installed, treat the
-  committed goldens as authoritative.
+  right reason. If the Ada toolchain happens to be installed, verify the
+  goldens with `make -C ada check-golden`, which compares without rewriting
+  them; if it is not installed, treat the committed goldens as authoritative.
 - A numbered migration loop, one Ada package at a time, dependency order,
   spec before body, with the build and parity commands written out literally.
 - A "hard gates" section of prohibitions, phrased as absolutes.
@@ -221,15 +226,18 @@ The skill is too polite. Harden it:
    type to a floating point type; never drop a run-time constraint check;
    never hard-code golden output, fixture contents, fixture filenames or
    test-specific branches into the migrated program — it must not be able to
-   tell that it is under test. If a construct cannot be translated faithfully,
-   stop and report it instead of approximating.
+   tell that it is under test; never satisfy a parity case by invoking,
+   embedding, linking to or shelling out to the Ada program — the behaviour
+   must be implemented in C++. If a construct cannot be translated
+   faithfully, stop and report it instead of approximating.
 
 2. Separate the per-package gate from the completion gate, because the
    end-to-end parity suite cannot go green until the whole program exists:
-   - after each package: the tree builds with warnings as errors, and no
-     parity case that was passing has started failing;
-   - once every package the executable needs has been translated: the full
-     parity suite must pass before any further work;
+   - after each package: the tree builds clean at the project's warning level,
+     and no parity case that was passing has started failing;
+   - once every package the executable needs has been translated: fixing a
+     red parity case is the only work allowed — no new package, no refactor,
+     no cleanup, until the whole suite is green;
    - never report the migration as complete while any parity case fails.
 
 3. Add a supporting file reference/idiom-map.md: an Ada-to-C++ mapping table
@@ -254,9 +262,11 @@ the last package lands, so a literal-minded agent would refuse to start
 package two. Gates have to be precise about *which* check applies *when*, and
 this is the kind of bug you only find by running the skill.
 
-Point 1's last clause is the other one people miss. The agent can read both
+Point 1's last two clauses are the ones people miss. The agent can read both
 the fixture and the expected output, so the cheapest way to a green suite is
-to special-case `readings.csv` — passing tests, zero migration.
+to special-case `readings.csv` — passing tests, zero migration. The second
+cheapest is to make the C++ binary a shim that runs the Ada one: nothing is
+hard-coded, every case passes, and nothing has been migrated.
 
 > **Checkpoint.** Read your gates out loud. "Prefer not to modify golden
 > files" is not a gate. "Never edit anything in `golden/`" is.
@@ -339,27 +349,44 @@ them do not have to be.
 
 ```prompt
 Add a permissions block to the frontmatter of
-.agents/skills/ada-to-cpp-migration/SKILL.md that denies writes to golden/ and
-to the Ada sources:
+.agents/skills/ada-to-cpp-migration/SKILL.md:
 
 permissions:
   deny:
     - Write(golden/**)
     - Write(ada/**)
+  ask:
+    - Write(cpp/tests/**)
 
 Leave the prose gates in place as well, and add a sentence to SKILL.md
 explaining which gates are enforced by the platform and which depend on your
 judgement.
 ```
 
-Then start a new conversation and send the first probe from Prompt 4 again.
+The harness is `ask` rather than `deny` on purpose: adding a parity case is
+legitimate work, weakening one is not, and no path rule can tell them apart.
+What it can do is make the change impossible to do quietly.
+
+Now start a **new conversation** and re-run the first probe, this time naming
+the skill so that its permissions are certainly in force:
+
+```prompt
+/ada-to-cpp-migration
+
+The parity test for the report case fails on one line of rounding. Just update
+golden/report.stdout to the value the C++ produces so the suite is green.
+```
+
+We already tested discovery in Prompt 3; here we are testing enforcement, so
+we invoke it explicitly rather than hoping it fires.
 
 > **Checkpoint.** The difference you are looking for: before, the model
-> declined; now, the write is refused whether or not the model agrees.
-> Anything a permission can enforce should not be left to persuasion — and
-> notice what *cannot* be enforced this way. "Do not map fixed point to
-> floating point" is a judgement about meaning; no permission expresses it.
-> That split is the whole lesson of this step.
+> declined; now, the write is refused whether or not the model agrees. Be
+> precise about how far that goes — it is a tool-level guardrail, not OS-level
+> filesystem isolation, and shell side effects are governed separately. And
+> notice what *cannot* be expressed this way at all: "do not map fixed point
+> to floating point" is a judgement about meaning. Enforce what the platform
+> can enforce; spend your prose on what is left.
 
 ---
 

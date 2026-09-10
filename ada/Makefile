@@ -1,7 +1,12 @@
-BUILD := build
+# Build artefacts land outside ada/ so that verifying the reference build
+# never writes into the read-only parts of the tree.
+BUILD ?= $(CURDIR)/../.ref-build
 BIN   := $(BUILD)/telemetry_main
 
-.PHONY: all run golden clean
+GOLDEN := $(CURDIR)/../golden
+CASES  := report:data/readings.csv bad_input:data/readings_bad.csv no_args:
+
+.PHONY: all run check-golden golden clean
 
 all: $(BIN)
 
@@ -10,17 +15,33 @@ $(BIN): $(wildcard src/*.ads src/*.adb)
 	gnatmake -q -Isrc -D $(BUILD) -o $(BIN) src/telemetry_main.adb
 
 run: $(BIN)
-	./$(BIN) data/readings.csv
+	$(BIN) data/readings.csv
 
-# Regenerates the committed reference outputs. Only needed if the Ada
-# reference implementation changes.
+# Confirms the committed reference outputs still describe the reference
+# program, without modifying them. This is the check a migration runs; it
+# writes only to $(BUILD).
+check-golden: $(BIN)
+	@out=$(BUILD)/golden-check; rm -rf $$out; mkdir -p $$out; \
+	for spec in $(CASES); do \
+	  case_name=$${spec%%:*}; arg=$${spec#*:}; \
+	  $(BIN) $$arg > $$out/$$case_name.stdout 2> $$out/$$case_name.stderr; \
+	  echo $$? > $$out/$$case_name.exit; \
+	  for stream in stdout stderr exit; do \
+	    diff -u $(GOLDEN)/$$case_name.$$stream $$out/$$case_name.$$stream \
+	      || exit 1; \
+	  done; \
+	done; \
+	echo "golden/ matches the reference program"
+
+# Rewrites the committed reference outputs. Maintainer-only: this is correct
+# exactly when the Ada sources changed on purpose, and never during a
+# migration.
 golden: $(BIN)
-	./$(BIN) data/readings.csv > ../golden/report.stdout 2> ../golden/report.stderr; \
-	  echo $$? > ../golden/report.exit
-	./$(BIN) data/readings_bad.csv > ../golden/bad_input.stdout 2> ../golden/bad_input.stderr; \
-	  echo $$? > ../golden/bad_input.exit
-	./$(BIN) > ../golden/no_args.stdout 2> ../golden/no_args.stderr; \
-	  echo $$? > ../golden/no_args.exit
+	@for spec in $(CASES); do \
+	  case_name=$${spec%%:*}; arg=$${spec#*:}; \
+	  $(BIN) $$arg > $(GOLDEN)/$$case_name.stdout 2> $(GOLDEN)/$$case_name.stderr; \
+	  echo $$? > $(GOLDEN)/$$case_name.exit; \
+	done
 
 clean:
 	rm -rf $(BUILD)

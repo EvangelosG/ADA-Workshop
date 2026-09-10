@@ -18,6 +18,9 @@ cmake --build cpp/build
 ctest --test-dir cpp/build --output-on-failure
 ```
 
+Warnings are errors on request: configure with `-DPARITY_WERROR=ON` to build
+the migration under `-Werror` / `/WX`.
+
 You need Devin Desktop 3.9.19 or newer (the material targets the **Devin
 Local** agent; Cascade was removed in that release), CMake 3.16+ and a C++17
 compiler. An Ada toolchain is **not** required — the reference outputs are
@@ -79,9 +82,15 @@ answer key never drifts from the sample it answers.
 Requires GNAT (`sudo apt-get install gnat`, or Alire on macOS/Windows):
 
 ```bash
-make -C ada run       # build and run against ada/data/readings.csv
-make -C ada golden    # regenerate golden/ (only if the Ada sources change)
+make -C ada run           # build and run against ada/data/readings.csv
+make -C ada check-golden  # verify golden/ still matches, changing nothing
+make -C ada golden        # rewrite golden/ — maintainer-only, and only when
+                          # the Ada sources changed on purpose
 ```
+
+A migration verifies with `check-golden`; it never runs `golden`. Build
+artefacts go to `.ref-build/` at the repo root, so verifying the reference
+never writes inside `ada/`.
 
 ## Checking the solution
 

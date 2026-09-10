@@ -1,4 +1,5 @@
 build/
+.ref-build/
 *.o
 *.ali
 __pycache__/

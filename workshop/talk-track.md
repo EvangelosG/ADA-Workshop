@@ -20,6 +20,7 @@ the session; budget 3 minutes at the top for stragglers if you did not.
 
 Slides 15–17 are talk-over-the-room slides: the attendees are working through
 Prompts 2 and 3 while you narrate. Do not stop the room to present them.
+Slide 14 is the exception — stop the room for it.
 
 ---
 
@@ -105,11 +106,12 @@ files; they cost nothing until the skill is invoked.
 
 Thirty seconds, and the first thing to cut if you are behind.
 
-> "A rule — `AGENTS.md`, or a file in `.devin/rules/` — is in context whether
-> it is relevant or not, so it has to be short and universally true. A skill
-> loads itself when it is relevant and brings its supporting files with it. A
-> migration procedure is long and conditional, and you want it to fire even
-> when the engineer has forgotten it exists. That is a skill."
+> "`AGENTS.md` is always-on project guidance, so it has to be short and
+> universally true; rules can be configured with other activation behaviours.
+> A skill is procedural context that loads when it is relevant and brings its
+> supporting files with it. A migration procedure is long and conditional,
+> and you want it to fire even when the engineer has forgotten it exists.
+> That is a skill."
 
 *If someone asks about Workflows:* they were a Cascade feature and Devin Local
 does not have them. The replacement is a skill you invoke with a slash
@@ -224,11 +226,12 @@ would be true of any project. What remains is the skill.
 > a meeting. What are three things it must never be allowed to do in order to
 > get a green test?"
 
-Take four or five answers and write them up. You will reliably get "change the
-expected output", "delete the test", "use a float". If nobody says "hard-code
-the fixture", ask: "how would *you* make three tests pass in one minute
-without doing the migration?" — someone will get there, and it lands far
-better from the room than from the slide.
+Take **two** answers and supply the rest yourself — with thirty people this
+becomes a five-minute discussion if you let it. You will reliably get "change
+the expected output" and "delete the test". Then ask the sharper question
+yourself: "how would *you* make three tests pass in one minute without doing
+the migration?" That gets you to hard-coding the fixture, and to its cousin:
+shelling out to the Ada binary.
 
 > "Keep your list. Mine is on the next slide and it is not more correct than
 > yours — it is just the one I have already run. The skill you write for your
@@ -245,10 +248,19 @@ is audible.
 
 ---
 
-## Slide 14 — The gate that deadlocks · talk over the room
+## Slide 14 — The gate that deadlocks · stop the room, 90 seconds
 
-This is the slide that teaches precision, so make sure it is heard even though
-they are typing.
+Hands off keyboards for this one. It is the strongest conceptual lesson in
+the hour and it does not survive being narrated at people staring at a
+terminal.
+
+Walk it as a sequence and let them answer step 3:
+
+1. the first package is translated
+2. the executable is still incomplete
+3. so what do the three end-to-end parity tests do? — *stay red*
+4. therefore "never advance while anything is red" is unsatisfiable
+5. therefore gates must be scoped to lifecycle stage
 
 > "'Never advance while any parity case fails' sounds like the most rigorous
 > rule on the list. It is a deadlock. The suite is end-to-end — it cannot go
@@ -265,6 +277,10 @@ Land the general point:
 > "You cannot find that bug by reading your skill. It reads beautifully. You
 > find it by running it — which is why the last third of this hour is testing,
 > not writing."
+
+> "And we are catching it together, here, instead of letting thirty machines
+> discover it independently in ten minutes. A skill is a program. It has
+> failure modes, and this is one of them."
 
 ---
 
@@ -338,6 +354,10 @@ fine thing to attack in the next step.
 > Friday. One edits the specification. One takes on unbounded numeric risk
 > with a promise to fix it later. One fakes the output entirely."
 
+*If the slot is running short, cut to the third probe.* It is the most
+concrete and the most memorable, and the first two can be demonstrated
+centrally in thirty seconds each.
+
 *Send the golden-file prompt. Read the refusal out loud, including the gate
 it cites.*
 
@@ -359,7 +379,16 @@ On the third probe, make the point explicitly:
 
 ## Slide 20 — Prompt 5, stop asking nicely · to 0:57
 
-The conceptual turn at the end of the hour.
+The conceptual turn at the end of the hour. **Drive this one yourself** —
+attendees who are caught up can follow along, but do not make thirty people
+edit YAML, open a conversation and diagnose a non-firing skill in the last
+five minutes.
+
+Invoke the skill explicitly for the re-probe (`/ada-to-cpp-migration`, then
+the golden-file request). Discovery was tested in Prompt 3; this step is
+about enforcement, and an explicit invocation makes the demo deterministic
+instead of hoping the skill fires on a prompt that is not a migration
+request.
 
 > "Everything you just watched depended on the model agreeing with you. It did
 > agree — but 'it agreed' is not a control."
@@ -368,6 +397,18 @@ The conceptual turn at the end of the hour.
 
 > "Now the write is denied by the platform. Not declined, denied. It does not
 > matter how good my excuse is."
+
+Be accurate about the layer, because someone will test it later:
+
+> "This is a tool-level guardrail, not OS-level filesystem isolation. Shell
+> side effects are governed separately. Prose rule, tool guardrail, sandbox —
+> three different strengths, and it is worth knowing which one you have."
+
+Point at the `ask` entry too:
+
+> "The harness is `ask`, not `deny`. Adding a parity case is legitimate;
+> weakening one is not; no path rule can tell those apart. What it can do is
+> make the change impossible to do quietly."
 
 Then the important half:
 
@@ -450,8 +491,16 @@ files that load only when the skill fires.
 
 **"Can we enforce these gates instead of asking for them?"**
 Partly, and that is slide 20. `permissions` in the frontmatter denies writes
-to paths outright; CI running the parity suite catches the rest. The prose
-gates cover what neither can express.
+to paths at the tool level; CI running the parity suite catches the rest. The
+prose gates cover what neither can express. Do not overclaim: a denied write
+tool is not a sandbox.
+
+**"Couldn't it just call the Ada binary from C++ and pass everything?"**
+Yes, and it is the best question in the deck — no hard-coded fixture, no
+golden file read, three green tests, zero migration. That is why the gate
+list forbids wrapping, linking to or shelling out to the reference program.
+Every characterization suite has this hole; the gate is the only thing that
+closes it.
 
 **"What is the difference between `allowed-tools` and `permissions`?"**
 `allowed-tools` narrows which tools the skill may use at all; `permissions`
