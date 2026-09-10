@@ -158,6 +158,24 @@ def test_answer_key_is_not_on_this_branch() -> None:
     assert not [name for name in tracked if name.startswith("solution/")]
 
 
+def test_answer_key_agrees_with_the_lab() -> None:
+    """Runs on the solution branch only; elsewhere there is nothing to check.
+
+    The lab and the finished skill are edited on different branches, which is
+    exactly the situation where they drift apart.
+    """
+    skill = ROOT / "solution" / "ada-to-cpp-migration" / "SKILL.md"
+    if not skill.exists():
+        return
+    text = skill.read_text(encoding="utf-8")
+    assert "Never delegate the behaviour to the reference implementation" in text
+    assert "check-golden" in text
+    assert "Write(cpp/tests/**)" in text
+    assert "tool-level guardrail" in text
+    # the gate must permit the debugging that turns the suite green
+    assert "Debugging the failure is not" in text
+
+
 def test_no_stale_references_to_retired_files() -> None:
     """lab-guide.md and prompts.md were folded into the page."""
     tracked = subprocess.run(
