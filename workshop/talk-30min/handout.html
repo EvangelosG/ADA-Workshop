@@ -130,13 +130,15 @@ footer {
 <body>
 <main>
 <h1 id="skills-that-can-be-trusted-with-a-migration">Skills that can be trusted with a migration</h1>
-<p>The takeaway page for the 30-minute talk. It repeats the deck's argument in
-enough detail to be useful a week later, and carries the reference material
-— the idiom map and the per-package checklist — inline, so it works on its
-own with nothing to clone and nothing to install.</p>
-<p>Nothing here asks you to run our code, and nothing here is specific to our
-sample: everything below applies to an Ada codebase you already have and
-are already allowed to build.</p>
+<p>How to write a Devin skill that migrates Ada to C++ and can be trusted with
+the result. It carries the reference material — the idiom map, the gate
+list, the per-unit checklist and a skeleton <code>SKILL.md</code> — inline, so it is
+usable with nothing to clone and nothing to install.</p>
+<p>The examples come from a migration built as a case study: ~450 lines of Ada
+(CSV of sensor readings → calibrate → summary → alerts), a C++17 port of it,
+and the defects that only appeared once the skill was run. Everything else
+applies directly to an Ada codebase you already have and are already
+allowed to build.</p>
 <h2 id="what-a-skill-is">What a skill is</h2>
 <p>A skill is a folder with a <code>SKILL.md</code> in it, plus whatever supporting files
 the procedure needs — checklists, mapping tables, templates. The frontmatter
@@ -229,8 +231,8 @@ compare all three, byte for byte. That is the definition of done: not a code
 review, not a diff of the sources.</p>
 <p>Be precise about what this buys you. A handful of cases is strong
 <strong>characterization evidence</strong> for the behaviour those cases cover. It is not
-proof that the two programs are equivalent, and an engineer in the room will
-say so if you overclaim it. Pick cases by failure mode rather than by count:</p>
+proof that the two programs are equivalent, and someone will rightly say so
+if you overclaim it. Pick cases by failure mode rather than by count:</p>
 <ul>
 <li>a normal case;</li>
 <li>a malformed input;</li>
@@ -298,7 +300,7 @@ to green is not to migrate at all:</p>
 <ol>
 <li><strong>Special-case the fixture.</strong> Branch on the filename, print the expected
    answer. Passing tests, zero migration.</li>
-<li><strong>Copy the evidence.</strong> <code>std::ifstream in("golden/report.stdout");</code>
+<li><strong>Copy the evidence.</strong> <code>std::ifstream in("&lt;captured output&gt;/report.stdout");</code>
    <code>std::cout &lt;&lt; in.rdbuf();</code> — this hard-codes nothing, so a rule that only
    forbids hard-coded output misses it entirely. Forbid build time too, or a
    generated header is the next move.</li>
@@ -314,8 +316,8 @@ legacy implementation produce the answer.</em></p>
 <p>Everything above holds because the model agrees with it. Some of it can be
 enforced instead:</p>
 <pre><code class="language-yaml">permissions:
-  deny:  [Write(golden/**), Write(ada/**)]
-  ask:   [Write(cpp/tests/**)]
+  deny:  [Write(&lt;captured output&gt;/**), Write(&lt;legacy sources&gt;/**)]
+  ask:   [Write(&lt;tests&gt;/**)]
 </code></pre>
 <p><code>deny</code> holds whether or not the model agrees. Tests are <code>ask</code> rather than
 <code>deny</code> because adding a parity case is legitimate work and weakening one is
@@ -327,20 +329,21 @@ expressed as a permission at all, because it is a judgement about meaning.</p>
 <blockquote>
 <p>Enforce what the platform can enforce. Reserve prose for judgement.</p>
 </blockquote>
-<h2 id="the-defect-our-own-suite-missed">The defect our own suite missed</h2>
-<p>The worked example declares:</p>
+<h2 id="the-defect-the-case-study-shipped">The defect the case study shipped</h2>
+<p>The Ada declares:</p>
 <pre><code class="language-ada">type Celsius is delta 0.1 digits 6 range -80.0 .. 150.0;
 </code></pre>
 <p>Our finished C++ checked that range on parsed input only. A reading of 150.0
 from a sensor with a +1.5 calibration offset therefore became 151.5 and
 printed a clean report, where the Ada program raises <code>Constraint_Error</code> and
-exits 2. All three parity cases passed. The answer key was breaking the
-skill's own "never drop a run-time constraint check" rule, and the evidence
-was too thin to notice.</p>
+exits 2. Every parity case passed — there were three, and none of them
+computed a value out of range. The migration was breaking the skill's own
+"never drop a run-time constraint check" rule, and the evidence was too
+thin to notice.</p>
 <p>The fix was two more cases: one where the constraint fails on a <em>computed</em>
 value, and one where a missing input file fails before any parsing, raising
 an exception that is not the program's own.</p>
-<p>What the story is about:</p>
+<p>What the story is about, for your migration:</p>
 <ul>
 <li>The gate was right. The evidence was too weak to catch its violation.</li>
 <li>Coverage gaps do not look like gaps from the inside. They look green.</li>
@@ -468,7 +471,9 @@ an exception that is not the program's own.</p>
 <h2 id="starting-on-your-own-codebase">Starting on your own codebase</h2>
 <ol>
 <li>Pick <strong>one runnable slice</strong> — not the system. Verify its build and run
-   commands yourself, not from memory.</li>
+   commands yourself, not from memory, then list the Ada constructs it uses:
+   fixed point, tagged types, discriminated records, generics, tasking.
+   That list is your risk inventory and the first draft of your idiom map.</li>
 <li>Capture stdout, stderr and exit status for four or five cases chosen by
    failure mode. If the program is not deterministic — timestamps, hash
    ordering, concurrency — making it deterministic is task one, and it is
@@ -494,7 +499,7 @@ name: &lt;legacy&gt;-to-&lt;target&gt;-migration
 description: Migrate &lt;legacy&gt; to &lt;target&gt; with parity proven against
   captured reference output. Use for any port/translate/rewrite request.
 permissions:
-  deny: [Write(&lt;reference output&gt;/**), Write(&lt;legacy sources&gt;/**)]
+  deny: [Write(&lt;captured output&gt;/**), Write(&lt;legacy sources&gt;/**)]
   ask:  [Write(&lt;tests&gt;/**)]
 ---
 

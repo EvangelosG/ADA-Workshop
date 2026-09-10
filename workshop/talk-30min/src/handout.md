@@ -1,13 +1,15 @@
 # Skills that can be trusted with a migration
 
-The takeaway page for the 30-minute talk. It repeats the deck's argument in
-enough detail to be useful a week later, and carries the reference material
-— the idiom map and the per-package checklist — inline, so it works on its
-own with nothing to clone and nothing to install.
+How to write a Devin skill that migrates Ada to C++ and can be trusted with
+the result. It carries the reference material — the idiom map, the gate
+list, the per-unit checklist and a skeleton `SKILL.md` — inline, so it is
+usable with nothing to clone and nothing to install.
 
-Nothing here asks you to run our code, and nothing here is specific to our
-sample: everything below applies to an Ada codebase you already have and
-are already allowed to build.
+The examples come from a migration built as a case study: ~450 lines of Ada
+(CSV of sensor readings → calibrate → summary → alerts), a C++17 port of it,
+and the defects that only appeared once the skill was run. Everything else
+applies directly to an Ada codebase you already have and are already
+allowed to build.
 
 ## What a skill is
 
@@ -91,8 +93,8 @@ review, not a diff of the sources.
 
 Be precise about what this buys you. A handful of cases is strong
 **characterization evidence** for the behaviour those cases cover. It is not
-proof that the two programs are equivalent, and an engineer in the room will
-say so if you overclaim it. Pick cases by failure mode rather than by count:
+proof that the two programs are equivalent, and someone will rightly say so
+if you overclaim it. Pick cases by failure mode rather than by count:
 
 - a normal case;
 - a malformed input;
@@ -151,7 +153,7 @@ to green is not to migrate at all:
 
 1. **Special-case the fixture.** Branch on the filename, print the expected
    answer. Passing tests, zero migration.
-2. **Copy the evidence.** `std::ifstream in("golden/report.stdout");`
+2. **Copy the evidence.** `std::ifstream in("<captured output>/report.stdout");`
    `std::cout << in.rdbuf();` — this hard-codes nothing, so a rule that only
    forbids hard-coded output misses it entirely. Forbid build time too, or a
    generated header is the next move.
@@ -171,8 +173,8 @@ enforced instead:
 
 ```yaml
 permissions:
-  deny:  [Write(golden/**), Write(ada/**)]
-  ask:   [Write(cpp/tests/**)]
+  deny:  [Write(<captured output>/**), Write(<legacy sources>/**)]
+  ask:   [Write(<tests>/**)]
 ```
 
 `deny` holds whether or not the model agrees. Tests are `ask` rather than
@@ -186,9 +188,9 @@ expressed as a permission at all, because it is a judgement about meaning.
 
 > Enforce what the platform can enforce. Reserve prose for judgement.
 
-## The defect our own suite missed
+## The defect the case study shipped
 
-The worked example declares:
+The Ada declares:
 
 ```ada
 type Celsius is delta 0.1 digits 6 range -80.0 .. 150.0;
@@ -197,15 +199,16 @@ type Celsius is delta 0.1 digits 6 range -80.0 .. 150.0;
 Our finished C++ checked that range on parsed input only. A reading of 150.0
 from a sensor with a +1.5 calibration offset therefore became 151.5 and
 printed a clean report, where the Ada program raises `Constraint_Error` and
-exits 2. All three parity cases passed. The answer key was breaking the
-skill's own "never drop a run-time constraint check" rule, and the evidence
-was too thin to notice.
+exits 2. Every parity case passed — there were three, and none of them
+computed a value out of range. The migration was breaking the skill's own
+"never drop a run-time constraint check" rule, and the evidence was too
+thin to notice.
 
 The fix was two more cases: one where the constraint fails on a *computed*
 value, and one where a missing input file fails before any parsing, raising
 an exception that is not the program's own.
 
-What the story is about:
+What the story is about, for your migration:
 
 - The gate was right. The evidence was too weak to catch its violation.
 - Coverage gaps do not look like gaps from the inside. They look green.
@@ -259,7 +262,9 @@ The traps are the entries that compile cleanly and give wrong answers.
 ## Starting on your own codebase
 
 1. Pick **one runnable slice** — not the system. Verify its build and run
-   commands yourself, not from memory.
+   commands yourself, not from memory, then list the Ada constructs it uses:
+   fixed point, tagged types, discriminated records, generics, tasking.
+   That list is your risk inventory and the first draft of your idiom map.
 2. Capture stdout, stderr and exit status for four or five cases chosen by
    failure mode. If the program is not deterministic — timestamps, hash
    ordering, concurrency — making it deterministic is task one, and it is
@@ -288,7 +293,7 @@ name: <legacy>-to-<target>-migration
 description: Migrate <legacy> to <target> with parity proven against
   captured reference output. Use for any port/translate/rewrite request.
 permissions:
-  deny: [Write(<reference output>/**), Write(<legacy sources>/**)]
+  deny: [Write(<captured output>/**), Write(<legacy sources>/**)]
   ask:  [Write(<tests>/**)]
 ---
 

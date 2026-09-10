@@ -339,18 +339,22 @@ def test_talk_edition_hands_over_a_skeleton_not_a_finished_skill(
     """
     for text in (talk_slides, handout_source):
         assert "<legacy>-to-<target>-migration" in text
-        assert "Write(<reference output>/**)" in text
+        assert "Write(<captured output>/**)" in text
         assert "skeleton" in text.lower()
 
 
 def test_talk_edition_stands_alone(talk_slides: str, handout_source: str) -> None:
     """For most of this audience the deck and the handout are the whole of
-    their exposure, so neither may position itself as the lesser half of a
-    lab they will never attend.
+    their exposure. Neither may position itself as the lesser half of a lab
+    they will never attend, and neither may narrate our repository as though
+    the room can see it — it is a case study they are told about.
     """
     for text in (talk_slides, handout_source):
         assert "hands-on version" not in text
         assert "this is not it" not in text.lower()
+        assert "case study" in text
+        assert "ctest" not in text
+        assert "golden/" not in text
 
 
 def test_talk_deck_is_legible_in_a_dark_room(talk_slides: str) -> None:

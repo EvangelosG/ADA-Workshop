@@ -29,15 +29,20 @@ Set the expectation immediately that this is not a product demo. The
 audience is engineers with Ada exposure; they have seen migration projects
 fail and are, correctly, sceptical.
 
-## 0:01 — What this session is
+## 0:01 — What you should leave with
 
 Tell them what they walk out with: the skeleton of the skill and the list of
 things it must never do, both on the handout. If your room could do the lab
 later, say so here — it changes how they listen. If not, do not raise it;
 this is a complete talk on its own terms.
 
-> "Everything here comes out of building the thing and then finding out it
-> was wrong. The last third of the talk is a defect in our own answer key."
+> "Everything here comes out of building one of these and then finding out
+> it was wrong. The last third of the talk is a defect we shipped."
+
+Say once, and only once, where the examples come from: a migration we built
+as a case study. After this slide the room should never need to wonder
+whether they are missing a repository — every instruction from here is
+phrased for their codebase.
 
 ## 0:03 — The problem with "just prompt it"
 
@@ -72,19 +77,25 @@ The mechanism explains three things at once: why the description matters so
 much, why supporting files are free, and why a beautiful `SKILL.md` with a
 bad description effectively does not exist.
 
-In the lab, attendees discover this by starting a fresh conversation and
-typing one vague sentence. Here you can only assert it — so assert it as the
-single most common defect, because it is.
+Give them the test to run themselves later: open a fresh conversation, type
+one vague sentence — *port the Ada telemetry program in this repo to C++* —
+and see whether the skill loads. A beautiful `SKILL.md` with a description
+nobody's phrasing matches effectively does not exist, and that is the single
+most common defect in a hand-written skill.
 
 ## 0:08 — Skill vs rule
 
 Thirty seconds. It exists to stop the "why isn't this just AGENTS.md?"
 question from arriving later, at a worse moment.
 
-## 0:09 — The worked example
+## 0:09 — Start by inventorying the risk
 
-Do not tour the code. The only load-bearing sentence is the last one: every
-construct on the slide has a plausible wrong translation that compiles.
+This is the first slide about *their* work, so frame it that way: the list
+is what an inventory looks like, and theirs is the deliverable. Do not tour
+our code — the room has never seen it and does not need to.
+
+The load-bearing sentence is the last one: every construct on that list has
+a plausible wrong translation that compiles.
 
 Name one for texture — `Integer'Image` puts a leading blank on
 non-negatives, so a C++ port that "obviously" prints the number produces
@@ -94,13 +105,14 @@ different bytes and every test that looks at stdout goes red.
 
 Slow down. This is the spine of the talk.
 
-> "Before a line of C++ existed, we ran the Ada program and captured stdout,
-> stderr and the exit status for five cases. Those files are the spec."
+> "Before you write a line of C++, run the Ada program and capture stdout,
+> stderr and the exit status for each case. Those files are the spec."
 
-Then immediately qualify it, before an engineer in the room does it for you:
-five cases are characterization evidence for the behaviour they cover, not
-proof that the two programs are equivalent. Saying it yourself buys you the
-credibility you will spend on the defect story later.
+Keep it in the second person — this is the instruction they take away, not a
+report on what we did. Then qualify it before an engineer in the room does
+it for you: a handful of cases is characterization evidence for the
+behaviour they cover, not proof that the two programs are equivalent.
+Saying it yourself buys the credibility you spend on the defect story later.
 
 ## 0:13 — The gates
 
@@ -123,9 +135,10 @@ does not dilute the gates.
 ## 0:17 — The gate that deadlocks
 
 Tell it as a mistake, because it was one. "Never advance while any parity
-case fails" was in our first draft, it sounds like discipline, and an
-obedient agent would have refused to start the second package — the suite is
-end-to-end and cannot go green until the last one lands.
+case fails" was in the first draft of the case-study skill, it sounds like
+discipline, and an obedient agent would have refused to start the second
+package — the suite is end-to-end and cannot go green until the last one
+lands.
 
 The fix is scope, not softening: per-package, at dependency closure, at
 completion. Land the general lesson — **you find this by running the skill,
@@ -173,15 +186,17 @@ The authoring lesson: this table lives in a reference file the skill loads
 when it needs it, not in `SKILL.md`. Procedure in the skill, domain detail
 alongside it.
 
-## 0:25 — The defect our own suite missed
+## 0:25 — The defect the case study shipped
 
-Tell this one straight, including that it was ours.
+Tell this one straight, including that it was ours. Admitting it is what
+makes the rest of the deck credible.
 
 The range check was on parsed input only. A reading of 150.0 on a sensor
 with a +1.5 offset became 151.5 and printed a clean report, where Ada raises
-`Constraint_Error` and exits 2. All three parity cases passed. The finished
-answer key was violating the skill's own "never drop a run-time constraint
-check" rule, and the suite could not see it.
+`Constraint_Error` and exits 2. Every parity case passed — there were three,
+and none computed a value out of range. The migration was violating the
+skill's own "never drop a run-time constraint check" rule, and the suite
+could not see it.
 
 Do not rush to the moral; let it sit for a second. Then: the fix was two new
 cases — a constraint that fails on a *computed* value, and a missing file,

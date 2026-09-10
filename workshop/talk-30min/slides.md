@@ -37,24 +37,22 @@ style: |
 
 # Skills that can be trusted with a migration
 
-## Devin Desktop, the Devin CLI, and an Ada → C++ worked example
+## Devin Desktop, the Devin CLI, and your Ada → C++ migration
 
 30 minutes
 
 ---
 
-## What this session is
+## What you should leave with
 
-A **method**, illustrated by a migration we already built and broke.
+1. How skills work in Devin Desktop and the Devin CLI — same format, one
+   folder, and what makes one fire.
+2. How to write a skill for **your** Ada → C++ migration: the evidence it
+   needs, the gates it needs, and how to tell a real gate from decoration.
 
-- how skills work in Devin Desktop and the Devin CLI — same format, one folder
-- what separates a skill that reads well from one that holds under pressure
-- the gates a migration skill needs, and the three ways round them we found
-- a real defect our own test suite missed, and why
-
-Everything here applies to an Ada codebase you already have and are already
-allowed to build. You leave with the skeleton of the skill and the list of
-things it must never do.
+The examples come from a migration we built as a case study, including the
+defects we only found by running it. You need nothing of ours to use any of
+it — the last two slides are the skeleton and the first steps.
 
 ---
 
@@ -141,7 +139,11 @@ exists.
 
 ---
 
-## The worked example
+## Start by inventorying the risk
+
+Before any skill, write down what the slice you are migrating actually uses.
+For the case study behind these slides — ~450 lines, CSV → calibrate →
+summary → alerts — that was:
 
 ```
 Telemetry            constrained subtypes, decimal fixed point, Image
@@ -151,29 +153,29 @@ Telemetry.Stats      generic subprogram, integer-scaled aggregation
 Telemetry.Alerts     discriminated record with a variant part
 ```
 
-~450 lines of Ada: CSV of sensor readings → calibrate → summary → alerts.
-
-Chosen because every construct here has a *plausible wrong* C++ translation
-— one that compiles cleanly and gives different answers.
+Every line of that list is a construct with a *plausible wrong* C++
+translation — one that compiles cleanly and gives different answers. Your
+inventory is the reference file your skill will load.
 
 ---
 
 ## Compilation is not migration
 
-The question a migration has to answer is not "does it build" but **"does it
-still do the same thing"**.
+The question is not "does it build" but **"does it still do the same
+thing"** — so the first artifact is not C++, it is evidence.
 
-Before a line of C++ existed we ran the Ada program and captured, per case:
+Before writing target code, run the Ada program and capture, per case:
 
 ```
 stdout        stderr        exit status
 ```
 
-`ctest` runs the C++ binary on the same input and compares all three, byte
-for byte. That is the definition of done — not a code review, not a diff.
+Then have your harness run the migrated binary on the same input and
+compare all three, byte for byte. That is the definition of done — not a
+code review, not a diff of the sources.
 
-> The captured output is the specification for the behaviour these cases
-> cover: characterization evidence, not proof of equivalence.
+> Captured output is the specification for the behaviour those cases cover:
+> characterization evidence, not proof of equivalence.
 
 ---
 
@@ -201,7 +203,7 @@ A prohibition is checkable — by the model, and by you in review.
 
 | Decoration | Gate |
 | --- | --- |
-| "Prefer not to modify golden files" | "Never edit anything in `golden/`" |
+| "Prefer not to modify the expected output" | "Never edit the captured reference output" |
 | "Try to keep tests passing" | "Never report done while any parity case fails or was skipped" |
 | "Be careful with numeric types" | "Never translate fixed point to `double`" |
 
@@ -235,13 +237,14 @@ you write has one of these in it.
 The agent can read the inputs *and* the expected output. So:
 
 1. **Special-case the fixture** — branch on the filename, print the answer.
-2. **Copy the evidence** — `std::ifstream in("golden/report.stdout");`
+2. **Copy the evidence** — `std::ifstream in("<captured output>/report");`
    `std::cout << in.rdbuf();` — hard-codes nothing, so a no-hard-coding rule
    misses it. Forbid build time too, or a generated header is next.
 3. **Delegate** — a C++ binary that shells out to the Ada one. Every case
    green, nothing translated.
 
-Each needed its own prohibition. Assume your list is one loophole short.
+Each of these needed its own prohibition in our case study. Write all three
+into yours, and assume your list is one loophole short.
 
 ---
 
@@ -249,8 +252,8 @@ Each needed its own prohibition. Assume your list is one loophole short.
 
 ```yaml
 permissions:
-  deny:  [Write(golden/**), Write(ada/**)]
-  ask:   [Write(cpp/tests/**)]
+  deny:  [Write(<captured output>/**), Write(<legacy sources>/**)]
+  ask:   [Write(<tests>/**)]
 ```
 
 `deny` holds **whether or not** the model agrees with you.
@@ -285,22 +288,23 @@ Traps go in a reference file the skill loads when needed, not in `SKILL.md`.
 
 ---
 
-## The defect our own suite missed
+## The defect the case study shipped
 
 ```ada
 type Celsius is delta 0.1 digits 6 range -80.0 .. 150.0;
 ```
 
-Our finished C++ checked that range **on parsed input only**. A reading of
-150.0 on a sensor with a +1.5 calibration offset produced 151.5 and printed
-a cheerful report; Ada raises `Constraint_Error` and exits 2.
+The finished C++ checked that range **on parsed input only**. A reading of
+150.0 on a sensor with a +1.5 calibration offset became 151.5 and printed a
+clean report; Ada raises `Constraint_Error` and exits 2.
 
-Three parity cases all passed. The migration was wrong, and the answer key
-was breaking its own "never drop a run-time constraint check" rule.
+Every parity case passed — there were three, and none of them computed a
+value out of range. The migration was wrong and the skill's own "never drop
+a run-time constraint check" rule was being broken in silence.
 
-Two cases now cover it: a constraint that fails on a **computed** value, and
-a missing input file — a failure *before* parsing, raising an exception that
-is not the program's own.
+The fix was two more cases: a constraint that fails on a **computed** value,
+and a missing input file — a failure *before* parsing, raising an exception
+that is not the program's own.
 
 ---
 
@@ -336,7 +340,7 @@ name: <legacy>-to-<target>-migration
 description: Migrate <legacy> to <target> with parity proven against
   captured reference output. Use for any port/translate/rewrite request.
 permissions:
-  deny: [Write(<reference output>/**), Write(<legacy sources>/**)]
+  deny: [Write(<captured output>/**), Write(<legacy sources>/**)]
   ask:  [Write(<tests>/**)]
 ---
 
