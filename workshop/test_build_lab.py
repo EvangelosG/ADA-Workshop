@@ -25,6 +25,16 @@ def page() -> str:
     return build_lab.render(build_lab.SOURCE.read_text(encoding="utf-8"))
 
 
+@pytest.fixture(scope="module")
+def standalone_source() -> str:
+    return (build_lab.ROOT / "src" / "standalone.md").read_text(encoding="utf-8")
+
+
+@pytest.fixture(scope="module")
+def standalone(standalone_source: str) -> str:
+    return build_lab.render(standalone_source, "standalone.md")
+
+
 def test_committed_page_is_up_to_date() -> None:
     result = subprocess.run(
         [sys.executable, "workshop/build_lab.py", "--check"],
@@ -137,6 +147,41 @@ def test_warnings_as_errors_is_real_where_it_is_claimed() -> None:
 def test_lab_teaches_enforced_as_well_as_prose_gates(page: str) -> None:
     assert "permissions:" in page
     assert "Write(golden/**)" in page
+
+
+def test_standalone_page_is_offline_self_contained(standalone: str) -> None:
+    assert not re.search(r"<script[^>]+\bsrc=", standalone)
+    assert "<link" not in standalone
+    assert not re.search(r"<img[^>]+\bsrc=\"https?:", standalone)
+    assert "<style>" in standalone and "<script>" in standalone
+
+
+def test_standalone_page_needs_nothing_of_ours(standalone_source: str) -> None:
+    """It exists for rooms that may not clone our repo or run our code.
+
+    Anything that tells the attendee to fetch, unpack or execute material we
+    supplied defeats its only purpose.
+    """
+    forbidden = ["git clone", "curl ", "wget ", "base64 -d", "tar -x", "readings.csv"]
+    for phrase in forbidden:
+        assert phrase not in standalone_source, phrase
+    assert "your own Ada codebase" in standalone_source
+
+
+def test_standalone_page_carries_the_reference_material(standalone: str) -> None:
+    """No repo means no idiom map or checklist unless the page contains them."""
+    assert "idiom map" in standalone.lower()
+    assert "delta 0.1 digits 6" in standalone
+    assert "per-package definition of done" in standalone.lower()
+
+
+def test_standalone_page_teaches_the_same_gates(standalone: str) -> None:
+    assert "/ada-to-cpp-migration" in standalone
+    assert "@ada-to-cpp-migration" not in standalone
+    assert "shelling out to the Ada program" in standalone
+    assert "permissions:" in standalone
+    assert "tool-level guardrail" in standalone
+    assert standalone.count('class="copy"') >= 7
 
 
 def test_answer_key_is_not_on_this_branch() -> None:

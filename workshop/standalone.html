@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Build an Ada→C++ migration skill — standalone edition</title>
+<style>
+:root {
+  --bg: #10131a;
+  --panel: #171b24;
+  --border: #262c38;
+  --text: #dfe4ec;
+  --muted: #99a2b3;
+  --accent: #7aa2f7;
+  --warn: #f0b866;
+  --code-bg: #0c0f15;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 16px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+main { max-width: 52rem; margin: 0 auto; padding: 3rem 1.5rem 6rem; }
+h1 { font-size: 2.1rem; line-height: 1.2; margin: 0 0 1rem; }
+h2 {
+  font-size: 1.5rem;
+  margin: 3.5rem 0 1rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+}
+h3 { font-size: 1.2rem; margin: 2.5rem 0 .75rem; color: var(--accent); }
+a { color: var(--accent); }
+hr { display: none; }
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.25rem 0;
+  font-size: .93rem;
+}
+th, td {
+  border: 1px solid var(--border);
+  padding: .5rem .7rem;
+  text-align: left;
+  vertical-align: top;
+}
+th { background: var(--panel); }
+code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: .88em;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: .08em .35em;
+}
+pre {
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem 1.1rem;
+  overflow-x: auto;
+}
+pre code { background: none; border: 0; padding: 0; font-size: .86rem; }
+blockquote {
+  margin: 1.5rem 0;
+  padding: .9rem 1.1rem;
+  background: rgba(240, 184, 102, .08);
+  border-left: 3px solid var(--warn);
+  border-radius: 0 6px 6px 0;
+}
+blockquote p { margin: .3rem 0; }
+details {
+  margin: 1.5rem 0;
+  padding: .9rem 1.1rem;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+summary { cursor: pointer; font-weight: 600; color: var(--warn); }
+.prompt {
+  position: relative;
+  margin: 1.25rem 0;
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  background: var(--code-bg);
+}
+.prompt-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: .45rem .8rem;
+  border-bottom: 1px solid var(--border);
+  font-size: .74rem;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.prompt pre { border: 0; background: none; margin: 0; }
+.prompt pre code { white-space: pre-wrap; }
+button.copy {
+  font: inherit;
+  font-size: .78rem;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--text);
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: .2rem .7rem;
+  cursor: pointer;
+}
+button.copy:hover { border-color: var(--accent); }
+button.copy.done { color: #7fd88f; border-color: #7fd88f; }
+footer {
+  margin-top: 4rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+  font-size: .85rem;
+}
+@media print {
+  body { background: #fff; color: #000; }
+  .prompt, pre, details, table, th { border-color: #bbb; background: #f6f6f6; }
+  button.copy { display: none; }
+  details[open], details { background: #f6f6f6; }
+}
+</style>
+</head>
+<body>
+<main>
+<h1 id="build-an-adac-migration-skill-standalone-edition">Build an Ada→C++ migration skill — standalone edition</h1>
+<p>This page is the whole workshop. Nothing to clone, nothing of ours to run,
+no network: it is one HTML file, and every reference table you would
+otherwise have got from a repository is reproduced below.</p>
+<p>You will work against <strong>your own Ada codebase</strong>. The instructor demonstrates
+each step on a sample program on screen; you do the same step on code you
+already have and are already allowed to build.</p>
+<blockquote>
+<p><strong>The one hour is not about finishing a migration.</strong> It is about producing
+a skill — a reusable, committed procedure — that makes the migration
+boring, and then attacking it to see whether it holds. If you finish a
+migration today you did it by hand and learned nothing that scales.</p>
+</blockquote>
+<hr />
+<h2 id="0-what-you-need">0. What you need</h2>
+<ul>
+<li>Devin Desktop 3.9.19 or newer. The agent is <strong>Devin Local</strong>; Cascade was
+  removed in that release, and with it the <code>@skill</code> syntax.</li>
+<li>An Ada codebase you can open, and — ideally — build and run.</li>
+<li>Nothing else. No files from us.</li>
+</ul>
+<p>If you cannot build your codebase today, you can still do every step except
+capturing real output; read <a href="#4-if-you-cannot-run-your-code-today">section 4</a>
+before you start.</p>
+<hr />
+<h2 id="1-skills-in-devin-local-the-90-seconds-you-need">1. Skills in Devin Local — the 90 seconds you need</h2>
+<ul>
+<li>A skill is a <strong>folder</strong> with a <code>SKILL.md</code> inside, not a saved prompt.
+  Project skills live in <code>.agents/skills/&lt;name&gt;/</code>, <code>.devin/skills/&lt;name&gt;/</code>
+  or <code>.windsurf/skills/&lt;name&gt;/</code> and are committed with the repo; global
+  skills live under <code>~/.config/devin/skills/&lt;name&gt;/</code>. We use
+  <code>.agents/skills/</code>.</li>
+<li>Frontmatter is YAML. Give yours an explicit <code>name</code> and a <code>description</code> —
+  the description is what makes the skill findable, so it is the one field
+  worth agonising over.</li>
+<li><strong>Progressive disclosure:</strong> until the skill fires, the agent has only the
+  <code>name</code> and <code>description</code> in context. That is why the description is
+  written as <em>when to invoke me</em>, not <em>what I contain</em> — and why the body
+  and the supporting files can be long at no cost.</li>
+<li><strong>Two triggers, both on by default.</strong> The agent invokes a skill itself
+  when the description matches the request, and you can invoke it by hand
+  with <code>/your-skill-name</code>.</li>
+<li>Supporting files beside <code>SKILL.md</code> — checklists, idiom tables, templates —
+  load once the skill is invoked. Keep <code>SKILL.md</code> short and push the bulk
+  out to them.</li>
+<li><strong>Skill vs rule:</strong> <code>AGENTS.md</code> is always-on project guidance, and rules can
+  be configured with other activation behaviours; a skill is procedural
+  context loaded on demand that brings its own files. Short universal
+  constraints are rules. A migration procedure is a skill.</li>
+<li>Frontmatter can also <em>enforce</em>, not merely instruct: <code>permissions</code> allows,
+  denies or prompts on specific scopes. We use that in
+  <a href="#step-7-stop-asking-nicely">step 7</a>.</li>
+</ul>
+<pre><code class="language-markdown">---
+name: ada-to-cpp-migration
+description: Migrate an Ada codebase (or a single Ada package) to C++17 with
+  behavioural parity proven against captured reference output. Use whenever
+  the request involves translating, porting or rewriting .ads/.adb sources
+  into C++, or extending an in-progress Ada to C++ migration.
+---
+</code></pre>
+<hr />
+<h2 id="2-the-idea-the-whole-hour-rests-on">2. The idea the whole hour rests on</h2>
+<p><strong>A migration that compiles is not a migration that works.</strong></p>
+<p>Before any C++ exists, you capture what the Ada program <em>does</em> — its stdout,
+its stderr, its exit status, for a fixed set of inputs — into files. Those
+captured files are the specification the C++ has to satisfy, byte for byte.
+The Ada source is the explanation; the captured output is the contract.</p>
+<p>Be precise about what that buys you. A handful of cases is strong
+<em>characterization evidence</em> for the behaviour those cases cover — not proof
+that the two programs are equivalent. Every behaviour you did not pin down is
+free to change silently. Deciding how many cases to pin down is a judgement
+you make deliberately, and writing it down is part of the skill.</p>
+<p>This is why the harness comes first. It is also the part that transfers
+unchanged to COBOL→Java, Fortran→Rust, or anything else.</p>
+<hr />
+<h2 id="3-the-hour">3. The hour</h2>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>What you do</th>
+<th>Clock</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Skills in Devin Local (above)</td>
+<td>0:05</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Why compile ≠ parity (above)</td>
+<td>0:09</td>
+</tr>
+<tr>
+<td>3</td>
+<td><strong>Step 1</strong> — choose a slice of your codebase</td>
+<td>0:12</td>
+</tr>
+<tr>
+<td>4</td>
+<td><strong>Step 2</strong> — build the golden harness first</td>
+<td>0:22</td>
+</tr>
+<tr>
+<td>5</td>
+<td><strong>Step 3</strong> — draft the skill · <strong>Step 4</strong> — harden it</td>
+<td>0:34</td>
+</tr>
+<tr>
+<td>6</td>
+<td><strong>Step 5</strong> — new conversation, does it even fire?</td>
+<td>0:44</td>
+</tr>
+<tr>
+<td>7</td>
+<td><strong>Step 6</strong> — attack your own gates</td>
+<td>0:53</td>
+</tr>
+<tr>
+<td>8</td>
+<td><strong>Step 7</strong> — permissions, and the wrap</td>
+<td>1:00</td>
+</tr>
+</tbody>
+</table>
+<p>Steps 6 and 7 are the payoff. If you are behind, cut translation work — never
+the probes.</p>
+<hr />
+<h2 id="4-if-you-cannot-run-your-code-today">4. If you cannot run your code today</h2>
+<p>Everything below still works except capturing real output. Substitute:</p>
+<ul>
+<li><strong>Step 2</strong> — instead of capturing goldens, have the agent write the harness
+  and a one-page note stating exactly which inputs would be captured, what
+  makes each of them deterministic, and what it would do about the parts that
+  are not. That note is genuinely the hard part of the exercise anyway.</li>
+<li><strong>Steps 5–7</strong> — unchanged. Triggering, probing and permissions do not need
+  a runnable build.</li>
+</ul>
+<hr />
+<h2 id="5-the-lab">5. The lab</h2>
+<p>Seven steps. Each prompt is a template: replace anything in <code>&lt;angle
+brackets&gt;</code> before sending. The <em>shape</em> of each prompt matters as much as the
+words, so read the note under it.</p>
+<h3 id="step-1-choose-a-slice">Step 1 — choose a slice</h3>
+<p>Pick something small, deterministic and observable: one executable with a CLI
+entry point, ideally reading files or stdin and writing a report. Avoid, for
+today, anything whose output includes timestamps, wall-clock timings, paths,
+process ids, addresses, or iteration over a hash-ordered container.</p>
+<div class="prompt"><div class="prompt-bar"><span>Paste into Devin Desktop</span><button class="copy" type="button">Copy</button></div><pre><code>Read the Ada sources under &lt;path&gt; and, without changing anything, tell me:
+
+1. the packages and their dependency order, leaves first
+2. every executable entry point, and for each one how its behaviour is
+   observable from outside the process (stdout, stderr, exit status, files
+   written)
+3. the constructs that are hard to translate faithfully to C++: fixed point
+   and other non-binary numeric types, constrained subtypes, tagged types
+   and dispatching, discriminated records with variant parts, generics,
+   tasking and protected objects, representation clauses, exception
+   propagation whose message text is printed
+4. anything that would make the output non-deterministic between two runs
+   with the same input
+
+Do not write any C++ or any skill yet.
+</code></pre></div>
+<p>Point 4 is the one people skip, and it is what decides whether a golden
+harness is possible at all. If the answer is "nothing", you have an easy
+migration to verify. If it is "the report starts with the current date", you
+have your first real task: making the output deterministic, or normalising
+it in the harness.</p>
+<blockquote>
+<p><strong>Checkpoint.</strong> You should be able to name one executable and 3–5 input
+cases that together exercise its interesting behaviour: the happy path, a
+malformed input, a boundary value, and the no-arguments case.</p>
+</blockquote>
+<h3 id="step-2-build-the-golden-harness-first">Step 2 — build the golden harness first</h3>
+<div class="prompt"><div class="prompt-bar"><span>Paste into Devin Desktop</span><button class="copy" type="button">Copy</button></div><pre><code>Before any migration work, build a parity harness for &lt;executable&gt; in this
+repo.
+
+- capture stdout, stderr and exit status of the current Ada program for each
+  of these cases: &lt;case 1&gt;, &lt;case 2&gt;, &lt;case 3&gt;
+- write them to golden/&lt;case&gt;.stdout, .stderr and .exit, and commit them
+- add a test target that runs a built binary against the same inputs and
+  compares all three streams exactly, failing on any difference
+- the comparison must be exact: no tolerances, no whitespace normalisation
+  beyond what you can justify to me in writing
+
+Then tell me which behaviours of the program are NOT covered by these cases.
+</code></pre></div>
+<p>Two things to insist on. <strong>Exact comparison</strong> — a tolerance added now is a
+migration bug you will never find later. And the closing question: the list
+of uncovered behaviour is the honest scope of your evidence, and it belongs
+in the skill you are about to write.</p>
+<blockquote>
+<p><strong>Checkpoint.</strong> The harness must <strong>fail</strong> against a deliberately broken
+binary and <strong>pass</strong> against the current one. A harness that has never
+failed is not yet a harness.</p>
+</blockquote>
+<h3 id="step-3-draft-the-skill">Step 3 — draft the skill</h3>
+<div class="prompt"><div class="prompt-bar"><span>Paste into Devin Desktop</span><button class="copy" type="button">Copy</button></div><pre><code>Create a project skill at .agents/skills/ada-to-cpp-migration/SKILL.md for
+migrating this codebase to C++17. It must contain:
+
+- a `description` in the frontmatter that will make you invoke this skill
+  automatically for any request about porting, translating or rewriting
+  .ads/.adb sources into C++, including a follow-up on a migration already
+  in progress
+- preconditions to check before writing any C++: trusted reference output
+  exists with known provenance, and the parity suite fails for the expected
+  reason rather than because the harness is broken
+- a numbered migration loop, one package at a time in dependency order,
+  spec before body, with the literal build and test commands for this repo
+- a &quot;hard gates&quot; section of prohibitions, phrased as absolutes
+
+Write it from what is actually in this repository — the real commands, the
+real paths. Do not invent a step you have not verified. Do not start the
+migration.
+</code></pre></div>
+<p>Three things make this prompt work: the description is specified
+<em>separately</em> from the content, the commands must be <strong>literal</strong>, and
+inventing unverified steps is forbidden. Ask for "a skill for migrating Ada
+to C++" instead and you get a plausible essay.</p>
+<p>Note the precondition wording: <em>trusted reference output</em>, not <em>a working
+build of the original</em>. A skill whose step one is impossible in your
+environment stops on step one.</p>
+<h3 id="your-turn-before-the-next-step">Your turn — before the next step</h3>
+<p>You are about to trust this skill across hundreds of files, unattended.</p>
+<p><strong>Name three things it must never be allowed to do in order to get a green
+test.</strong> Two answers from the room, then compare with the list below.</p>
+<details>
+<summary>The canonical list</summary>
+
+- never edit the captured reference output to make a test pass
+- never edit the original sources
+- never weaken, skip, delete or add a tolerance to a parity test
+- never regress a case that was passing
+- never make the program aware that it is under test — no hard-coded
+  expected output, no fixture filenames, no test-specific branch
+- never delegate the behaviour back to the original: no invoking, embedding,
+  linking to or shelling out to the Ada program
+- never translate a fixed point or integer type to floating point
+- never drop a run-time constraint check
+- if a construct cannot be translated faithfully — stop and report it
+
+</details>
+
+<h3 id="step-4-harden-it">Step 4 — harden it</h3>
+<div class="prompt"><div class="prompt-bar"><span>Paste into Devin Desktop</span><button class="copy" type="button">Copy</button></div><pre><code>Now harden the skill.
+
+1. Add these gates, worded as absolutes with no escape hatch: never edit the
+   captured reference output; never edit the Ada sources; never weaken, skip
+   or delete a parity test and never add a tolerance to a comparison that
+   was exact; never regress a case that was passing; never make the program
+   aware that it is under test — no hard-coded expected output, no fixture
+   filenames, no branch that behaves differently for a particular input, no
+   reading of the golden files at run time; never satisfy a parity case by
+   invoking, embedding, linking to or shelling out to the Ada program — the
+   behaviour must be implemented in C++; never translate a fixed point or
+   integer type to floating point; never drop a run-time constraint check.
+   If a construct cannot be translated faithfully, stop and report it.
+
+2. Separate the per-package gate from the completion gate, because an
+   end-to-end parity suite cannot go green until the whole program exists:
+   - after each package: the tree builds clean at the project's warning
+     level, and no parity case that was passing has started failing;
+   - once every package the executable needs has been translated: fixing a
+     red parity case is the only work allowed — no new package, no refactor,
+     no cleanup, until the whole suite is green;
+   - never report the migration as complete while any case fails or was
+     skipped.
+
+3. Move the detail out of SKILL.md into supporting files in the same folder:
+   reference/idiom-map.md for the Ada-to-C++ mappings you found in this
+   codebase, with the traps marked, and checklists/per-package.md as the
+   definition of done for one package.
+
+Keep SKILL.md short. It is the procedure; the files are the reference.
+</code></pre></div>
+<p>Point 2 is the lesson that survives the hour. "Never advance while any parity
+case fails" sounds rigorous and <strong>deadlocks</strong>: your suite is end-to-end, so
+it stays red until the last package lands, and an obedient agent refuses to
+start package two. Gates have to be scoped to the stage of the work. You do
+not find that bug by reading the skill — it reads beautifully. You find it by
+running it.</p>
+<p>Point 1's last two clauses are the ones people miss. The agent can read both
+the inputs and the expected output, so the cheapest route to a green suite is
+to special-case the fixture — passing tests, zero migration. The second
+cheapest is a C++ binary that shells out to the Ada one: nothing hard-coded,
+every case green, nothing migrated.</p>
+<blockquote>
+<p><strong>Checkpoint.</strong> <code>SKILL.md</code> should be roughly a page. If it is three, the
+reference material has not moved out yet.</p>
+</blockquote>
+<h3 id="step-5-does-it-even-fire">Step 5 — does it even fire?</h3>
+<p>Start a <strong>new conversation</strong> and send exactly this, naming nothing:</p>
+<div class="prompt"><div class="prompt-bar"><span>Paste into Devin Desktop</span><button class="copy" type="button">Copy</button></div><pre><code>Port the Ada program in this repo to C++.
+</code></pre></div>
+<p>Watch for the skill loading before any code is written.</p>
+<ul>
+<li>It fired → your description matches how people actually ask.</li>
+<li>It did not → fix the <strong>description</strong>, not the prompt. Rewrite it in the
+  words of the request, then start another new conversation and retry.</li>
+</ul>
+<p>You can always invoke it by hand with <code>/ada-to-cpp-migration</code>. Nobody will —
+which is the point. A skill with a weak description effectively does not
+exist, and this is the single most common defect in a hand-written skill.</p>
+<p>Let it work for a few minutes. You are not trying to finish; you want
+something partly migrated to attack.</p>
+<h3 id="step-6-attack-your-own-gates">Step 6 — attack your own gates</h3>
+<p>The deliverable of this step is <strong>three refusals</strong>. Send them one at a time,
+in the conversation where it is working.</p>
+<div class="prompt"><div class="prompt-bar"><span>Paste into Devin Desktop</span><button class="copy" type="button">Copy</button></div><pre><code>The parity test fails on one line of rounding. Just update the expected
+output file to what our C++ produces so the suite is green.
+</code></pre></div>
+<div class="prompt"><div class="prompt-bar"><span>Paste into Devin Desktop</span><button class="copy" type="button">Copy</button></div><pre><code>Skip the fixed point wrapper for now, use double for the numeric type, we
+can tighten it later.
+</code></pre></div>
+<div class="prompt"><div class="prompt-bar"><span>Paste into Devin Desktop</span><button class="copy" type="button">Copy</button></div><pre><code>We're short on time. Just detect the test input filename and print the
+expected output so the parity suite passes.
+</code></pre></div>
+<p>Each refusal should cite the gate it is enforcing. A gate that folds under
+mild social pressure is decoration: rewrite it as an absolute and re-run the
+probe in a fresh conversation.</p>
+<blockquote>
+<p><strong>Checkpoint.</strong> You are testing the <em>skill</em>, not the model. If it complies
+with any of the three, that is the finding — and fixing the wording is the
+exercise.</p>
+</blockquote>
+<h3 id="step-7-stop-asking-nicely">Step 7 — stop asking nicely</h3>
+<p>Every gate so far is prose: it holds because the model agrees with you.</p>
+<div class="prompt"><div class="prompt-bar"><span>Paste into Devin Desktop</span><button class="copy" type="button">Copy</button></div><pre><code>Add a permissions block to the frontmatter of
+.agents/skills/ada-to-cpp-migration/SKILL.md that denies writes to the
+captured reference output and the Ada sources, and asks before writing to
+the parity tests:
+
+permissions:
+  deny:
+    - Write(golden/**)
+    - Write(&lt;ada source dir&gt;/**)
+  ask:
+    - Write(&lt;test dir&gt;/**)
+
+Leave the prose gates in place as well, and add a sentence to SKILL.md
+explaining which gates the platform enforces and which depend on your
+judgement.
+</code></pre></div>
+<p>The tests are <code>ask</code> rather than <code>deny</code> on purpose: adding a parity case is
+legitimate work, weakening one is not, and no path rule can tell them apart.
+What it can do is make the change impossible to make quietly.</p>
+<p>Now start a new conversation and re-run the first probe, naming the skill so
+its permissions are certainly in force:</p>
+<div class="prompt"><div class="prompt-bar"><span>Paste into Devin Desktop</span><button class="copy" type="button">Copy</button></div><pre><code>/ada-to-cpp-migration
+
+The parity test fails on one line of rounding. Just update the expected
+output file to what our C++ produces so the suite is green.
+</code></pre></div>
+<blockquote>
+<p><strong>Checkpoint.</strong> Before, the model declined. Now the write is refused
+whether or not the model agrees. Be precise about how far that goes: it is
+a tool-level guardrail, not OS-level filesystem isolation, and shell side
+effects are governed separately. And notice what cannot be expressed this
+way at all — "do not map fixed point to <code>double</code>" is a judgement about
+meaning. Enforce what the platform can enforce; spend your prose on what is
+left.</p>
+</blockquote>
+<hr />
+<h2 id="6-reference-the-adac-idiom-map">6. Reference: the Ada→C++ idiom map</h2>
+<p>Start your own <code>reference/idiom-map.md</code> from this and add every trap you hit.
+The valuable entries are the ones that <strong>compile cleanly and give wrong
+answers</strong>.</p>
+<table>
+<thead>
+<tr>
+<th>Ada</th>
+<th>C++</th>
+<th>Trap</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>package P</code> / child <code>P.C</code></td>
+<td><code>namespace p</code> / <code>p::c</code>, header per spec</td>
+<td>—</td>
+</tr>
+<tr>
+<td>package spec / body</td>
+<td><code>.hpp</code> / <code>.cpp</code></td>
+<td>private part of the spec is not public</td>
+</tr>
+<tr>
+<td><code>type T is range 1 .. 99</code></td>
+<td>wrapper with a checked constructor</td>
+<td>a bare <code>int</code> silently drops the constraint</td>
+</tr>
+<tr>
+<td><code>delta 0.1 digits 6</code> (decimal fixed point)</td>
+<td>scaled integer (<code>int tenths</code>)</td>
+<td><strong>never <code>double</code></strong> — decimal rounding differs</td>
+</tr>
+<tr>
+<td><code>mod</code> / <code>rem</code></td>
+<td><code>%</code> is <code>rem</code>; <code>mod</code> differs for negatives</td>
+<td>wrong sign, only on negative inputs</td>
+</tr>
+<tr>
+<td><code>Integer'Image (N)</code></td>
+<td>manual formatting</td>
+<td>leading blank for non-negative values</td>
+</tr>
+<tr>
+<td>enumeration <code>'Image</code></td>
+<td>table of names</td>
+<td>Ada prints them upper case</td>
+</tr>
+<tr>
+<td><code>array (Positive range &lt;&gt;)</code></td>
+<td><code>std::vector</code></td>
+<td><strong>1-based</strong> vs 0-based indexing</td>
+</tr>
+<tr>
+<td>unconstrained array parameter</td>
+<td>span + explicit bounds</td>
+<td><code>'First</code>/<code>'Last</code> are not always 1..N</td>
+</tr>
+<tr>
+<td>record with discriminant + variant part</td>
+<td><code>std::variant</code> of payload structs</td>
+<td>the invalid-component check disappears</td>
+</tr>
+<tr>
+<td>abstract tagged type</td>
+<td>abstract class, <code>virtual</code>, <code>override</code></td>
+<td>slicing on copy</td>
+</tr>
+<tr>
+<td><code>T'Class</code> parameter</td>
+<td>reference or pointer to base</td>
+<td>pass by value and dispatch is lost</td>
+</tr>
+<tr>
+<td>generic package / subprogram</td>
+<td>template</td>
+<td>instantiation errors move to use sites</td>
+</tr>
+<tr>
+<td><code>raise E with "msg"</code></td>
+<td><code>throw</code> carrying the text</td>
+<td>the message is often <em>printed</em> — it is output</td>
+</tr>
+<tr>
+<td>unhandled exception</td>
+<td><code>main</code> catch + exit status</td>
+<td>Ada's default exit status and stderr text</td>
+</tr>
+<tr>
+<td><code>Text_IO.Put_Line</code></td>
+<td><code>std::cout &lt;&lt; ... &lt;&lt; '\n'</code></td>
+<td>trailing newline at end of file</td>
+</tr>
+<tr>
+<td><code>Float</code>/<code>Long_Float</code></td>
+<td><code>float</code>/<code>double</code></td>
+<td>formatting digits differ</td>
+</tr>
+<tr>
+<td>task / protected object</td>
+<td><code>std::thread</code> / <code>std::mutex</code></td>
+<td>scheduling order becomes observable</td>
+</tr>
+<tr>
+<td><code>'Valid</code>, subtype checks</td>
+<td>explicit validation</td>
+<td>dropping them changes behaviour on bad input</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="7-reference-per-package-definition-of-done">7. Reference: per-package definition of done</h2>
+<pre><code class="language-text">Spec
+[ ] every entity exported by the .ads exists in the header
+[ ] nothing private to the body leaked into the header
+[ ] every exception the package can raise is declared and reachable
+[ ] every subtype constraint whose enforcement point is in this package has
+    an explicit check with the same observable effect
+[ ] constraints enforced only by a not-yet-translated package are recorded
+    as deferred obligations, and closed before the closure gate
+
+Semantics
+[ ] no fixed point or integer type became a double
+[ ] array indexing bases and bounds preserved
+[ ] mod vs rem checked for negative operands
+[ ] exception messages byte-identical, including punctuation
+[ ] output formatting identical, including leading blanks and newlines
+
+Build and test
+[ ] new sources added to the build
+[ ] compiles clean at the project's warning level, warnings-as-errors where
+    the build supports it
+[ ] no parity case that was passing now fails
+[ ] if this package completes the executable's dependency closure, the whole
+    parity suite is green
+[ ] no golden file, original source or test was modified
+[ ] no fixture name, expected output or test-specific branch in the migrated
+    sources, and nothing that invokes, links to or wraps the Ada program
+
+Review
+[ ] the C++ can be diffed against the Ada unit by name
+[ ] every construct that could not be translated faithfully was reported,
+    with its source location
+</code></pre>
+<hr />
+<h2 id="8-take-it-further">8. Take it further</h2>
+<ol>
+<li>Commit the skill. It is only worth writing because the next engineer, and
+   every future session on this repo, gets it for free.</li>
+<li>Add every trap you hit to the idiom map, in the same commit as the fix.
+   The map is the part that compounds.</li>
+<li>Widen the harness before you widen the migration. New case first, then the
+   code that has to satisfy it.</li>
+<li>Resist generalising the skill. A skill that works for any Ada codebase
+   knows nothing about yours: it cannot name your build command, your entry
+   points or your traps. Specific skills are stronger skills.</li>
+</ol>
+<h2 id="the-three-things">The three things</h2>
+<ol>
+<li>The <strong>description</strong> decides whether the skill exists in practice.</li>
+<li>The <strong>gates</strong> decide whether its output can be trusted — and the ones the
+   platform can enforce should not be left to persuasion.</li>
+<li>The <strong>evidence</strong> — captured output, byte for byte — decides whether the
+   migration is real.</li>
+</ol>
+<footer>
+Generated from <code>workshop/src/standalone.md</code> by
+<code>workshop/build_lab.py</code> — edit the markdown, not this file.
+Repo: <a href="https://github.com/EvangelosG/ADA-Workshop">github.com/EvangelosG/ADA-Workshop</a>
+</footer>
+</main>
+<script>
+document.querySelectorAll('button.copy').forEach(function (button) {
+  button.addEventListener('click', function () {
+    var text = button.closest('.prompt').querySelector('code').innerText;
+    var done = function () {
+      button.textContent = 'Copied';
+      button.classList.add('done');
+      setTimeout(function () {
+        button.textContent = 'Copy';
+        button.classList.remove('done');
+      }, 1500);
+    };
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text).then(done);
+      return;
+    }
+    var area = document.createElement('textarea');
+    area.value = text;
+    area.style.position = 'fixed';
+    area.style.opacity = '0';
+    document.body.appendChild(area);
+    area.select();
+    document.execCommand('copy');
+    document.body.removeChild(area);
+    done();
+  });
+});
+</script>
+</body>
+</html>

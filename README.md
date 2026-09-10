@@ -38,8 +38,15 @@ Rebuild the deck after editing the source:
 npx @marp-team/marp-cli@latest --pdf workshop/slides.md -o workshop/slides.pdf
 ```
 
-The attendee page is generated — edit `workshop/src/lab.md`, never
-`workshop/lab.html`:
+`workshop/standalone.html` is the backup edition, for a room that may not
+clone this repository or run code from it (a common government-client
+constraint). It needs nothing of ours: attendees work against their own Ada
+codebase, the instructor demonstrates on this one, and the idiom map and
+checklist are reproduced in the page itself. Same seven steps, same gates.
+Hand it out as a single file.
+
+Both pages are generated — edit the sources under `workshop/src/`, never the
+HTML:
 
 ```bash
 pip install markdown
@@ -56,6 +63,7 @@ pytest workshop/test_build_lab.py
 | `golden/` | Captured stdout, stderr and exit status of the Ada program — the specification. |
 | `cpp/` | Where the migration goes: a stub `main.cpp` plus the parity harness. |
 | `workshop/lab.html` | The attendee page (generated from `workshop/src/lab.md`). |
+| `workshop/standalone.html` | Backup edition for rooms that cannot use this repo (from `workshop/src/standalone.md`). |
 | `workshop/` | Slides, talk track, and the attendee page generator. |
 
 ## The answer key

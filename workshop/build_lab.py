@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
-"""Render workshop/src/lab.md into the self-contained attendee page.
+"""Render the workshop's markdown sources into self-contained HTML pages.
 
-The output is a single HTML file with no external requests, so it works from
+Each output is a single HTML file with no external requests, so it works from
 a file:// URL on a laptop with no network. Prompt blocks (```prompt) get a
 copy button.
+
+    lab.md         the repo-based lab
+    standalone.md  the backup page for rooms that cannot clone or run our code
 
     pip install markdown
     python3 workshop/build_lab.py
@@ -22,6 +25,12 @@ import markdown
 ROOT = Path(__file__).resolve().parent
 SOURCE = ROOT / "src" / "lab.md"
 OUTPUT = ROOT / "lab.html"
+
+# (markdown source, generated page)
+PAGES = [
+    (SOURCE, OUTPUT),
+    (ROOT / "src" / "standalone.md", ROOT / "standalone.html"),
+]
 
 STYLE = """
 :root {
@@ -187,7 +196,7 @@ PAGE = """<!DOCTYPE html>
 <main>
 {body}
 <footer>
-Generated from <code>workshop/src/lab.md</code> by
+Generated from <code>workshop/src/{source_name}</code> by
 <code>workshop/build_lab.py</code> — edit the markdown, not this file.
 Repo: <a href="https://github.com/EvangelosG/ADA-Workshop">github.com/EvangelosG/ADA-Workshop</a>
 </footer>
@@ -217,7 +226,7 @@ def wrap_prompts(body: str) -> str:
     return PROMPT_BLOCK.sub(replace, body)
 
 
-def render(source_text: str) -> str:
+def render(source_text: str, source_name: str = "lab.md") -> str:
     converter = markdown.Markdown(
         extensions=["extra", "sane_lists", "toc"],
         extension_configs={"toc": {"permalink": False}},
@@ -228,7 +237,11 @@ def render(source_text: str) -> str:
     if match:
         title = match.group(1).strip()
     return PAGE.format(
-        title=html.escape(title), style=STYLE, script=SCRIPT, body=body
+        title=html.escape(title),
+        style=STYLE,
+        script=SCRIPT,
+        body=body,
+        source_name=source_name,
     )
 
 
@@ -241,22 +254,27 @@ def main() -> int:
     )
     args = parser.parse_args()
 
-    rendered = render(SOURCE.read_text(encoding="utf-8"))
+    stale = False
+    for source, output in PAGES:
+        rendered = render(source.read_text(encoding="utf-8"), source.name)
 
-    if args.check:
-        current = OUTPUT.read_text(encoding="utf-8") if OUTPUT.exists() else ""
-        if current != rendered:
-            print(
-                f"{OUTPUT.name} is out of date; run python3 workshop/build_lab.py",
-                file=sys.stderr,
-            )
-            return 1
-        print(f"{OUTPUT.name} is up to date")
-        return 0
+        if args.check:
+            current = output.read_text(encoding="utf-8") if output.exists() else ""
+            if current != rendered:
+                print(
+                    f"{output.name} is out of date; "
+                    "run python3 workshop/build_lab.py",
+                    file=sys.stderr,
+                )
+                stale = True
+            else:
+                print(f"{output.name} is up to date")
+            continue
 
-    OUTPUT.write_text(rendered, encoding="utf-8")
-    print(f"wrote {OUTPUT}")
-    return 0
+        output.write_text(rendered, encoding="utf-8")
+        print(f"wrote {output}")
+
+    return 1 if stale else 0
 
 
 if __name__ == "__main__":
