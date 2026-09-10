@@ -7,8 +7,12 @@ Work through this before reporting a package as migrated.
 - [ ] Every entity exported by the `.ads` exists in the header.
 - [ ] Nothing private to the body leaked into the header.
 - [ ] Every exception the package can raise is declared and reachable.
-- [ ] Every subtype constraint has an explicit check with the same
-      observable effect as the Ada run-time check.
+- [ ] Every subtype constraint whose enforcement point lives in this package
+      has an explicit check with the same observable effect as the Ada
+      run-time check.
+- [ ] Constraints enforced only where a not-yet-translated package uses them
+      are written down as deferred obligations, and closed before the
+      dependency-closure gate.
 
 ## Semantics
 
@@ -24,13 +28,15 @@ Work through this before reporting a package as migrated.
 ## Build and test
 
 - [ ] New sources listed in `cpp/CMakeLists.txt`.
-- [ ] Compiles with `-Wall -Wextra` (or `/W4`) with no new warnings.
+- [ ] Compiles with `-Wall -Wextra` (or `/W4`) with no new warnings;
+      `-DPARITY_WERROR=ON` if the build offers it.
 - [ ] No parity case that was passing before this package now fails.
 - [ ] If this package completes the executable's dependency closure, the
       whole parity suite is green.
 - [ ] No golden file, Ada source, or test was modified.
 - [ ] No fixture name, expected output or test-specific branch appears in the
-      migrated sources.
+      migrated sources, and nothing in them invokes, links to or wraps the
+      Ada program.
 
 ## Review
 

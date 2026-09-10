@@ -15,23 +15,29 @@ against files captured from the Ada program:
 All three must match exactly. Exit status and stderr matter: a program that
 prints the right report but returns the wrong status has not been migrated.
 
-## Capturing the reference output
+## Capturing and verifying the reference output
 
 ```
-make -C ada golden
+make -C ada check-golden   # re-run the reference, diff, change nothing
+make -C ada golden         # rewrite golden/ — never during a migration
 ```
 
-Regenerate only when the Ada reference implementation itself changes, and
-review the diff — an unexplained change in `golden/` during a migration means
-something is wrong.
+A migration only ever runs the first. Capturing is a maintainer action, taken
+when the Ada reference implementation itself changes on purpose; the skill's
+`permissions` block denies writes to `golden/` for exactly this reason.
+An unexplained change in `golden/` during a migration means something is
+wrong.
 
 ## Running it
 
 ```
-cmake -S cpp -B cpp/build
+cmake -S cpp -B cpp/build -DPARITY_WERROR=ON
 cmake --build cpp/build
 ctest --test-dir cpp/build --output-on-failure
 ```
+
+`PARITY_WERROR` turns the project's warning level into errors; use it so that
+"builds clean" is a fact rather than an intention.
 
 The runner is `cpp/tests/parity.cmake`, invoked through `cmake -P` so the
 suite has no shell dependency and behaves the same on Windows.
