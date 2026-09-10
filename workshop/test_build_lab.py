@@ -323,7 +323,7 @@ def test_talk_deck_covers_the_gates_it_cannot_demonstrate(talk_slides: str) -> N
         "at build or run time",
         "shell out to the legacy program",
         "run-time constraint check",
-        "only work allowed",
+        "only allowed work",
         "fails or was skipped",
         "permissions:",
         "Constraint_Error",
@@ -338,23 +338,25 @@ def test_talk_edition_hands_over_a_skeleton_not_a_finished_skill(
     our fixture names and our domain into codebases that have neither.
     """
     for text in (talk_slides, handout_source):
-        assert "<legacy>-to-<target>-migration" in text
-        assert "Write(<captured output>/**)" in text
         assert "skeleton" in text.lower()
+        assert "## Gates" in text
+        assert "## Reporting" in text
+        assert "Telemetry.Sensors" not in text
 
 
 def test_talk_edition_stands_alone(talk_slides: str, handout_source: str) -> None:
-    """For most of this audience the deck and the handout are the whole of
-    their exposure. Neither may position itself as the lesser half of a lab
-    they will never attend, and neither may narrate our repository as though
-    the room can see it — it is a case study they are told about.
+    """The deck and the handout are the whole of this audience's exposure.
+    Neither may position itself as the lesser half of a lab they will never
+    attend, and neither may lean on a repository they cannot open: every
+    example has to be readable as an invented one.
     """
     for text in (talk_slides, handout_source):
         assert "hands-on version" not in text
         assert "this is not it" not in text.lower()
-        assert "case study" in text
+        assert "case study" not in text.lower()
         assert "ctest" not in text
         assert "golden/" not in text
+        assert "no prior experience" in text.lower()
 
 
 def test_talk_deck_is_legible_in_a_dark_room(talk_slides: str) -> None:

@@ -45,14 +45,13 @@ style: |
 
 ## What you should leave with
 
-1. How skills work in Devin Desktop and the Devin CLI — same format, one
-   folder, and what makes one fire.
-2. How to write a skill for **your** Ada → C++ migration: the evidence it
-   needs, the gates it needs, and how to tell a real gate from decoration.
+1. What a skill **is**, as files on your disk, and how Devin picks it up.
+2. How to write one for **your** Ada → C++ migration: what goes in which
+   file, what evidence it needs, and what it must never be allowed to do.
 
-The examples come from a migration we built as a case study, including the
-defects we only found by running it. You need nothing of ours to use any of
-it — the last two slides are the skeleton and the first steps.
+No prior experience with AI tools assumed, and nothing here needs a
+repository you do not already have. The last three slides are a skeleton
+and a first-hour plan for your own code.
 
 ---
 
@@ -63,20 +62,37 @@ A good prompt migrates one package, once, in one conversation.
 A migration is:
 
 - hundreds of packages
-- the same 12 decisions, every time
-- the same 7 traps, every time
-- a different engineer, a different day, a fresh context window
+- the same decisions, every time
+- the same traps, every time
+- a different engineer, a different day, a fresh conversation with no memory
+  of the last one
 
-Prompting re-derives the method every session. **Skills persist it.**
+Typing the method again each time means re-deriving it each time — and
+getting a slightly different answer. **A skill is that method, written down
+once, in a file.**
 
 ---
 
-## Skills in 90 seconds
+## A skill is a folder of markdown
 
-- A folder with a `SKILL.md` — plus checklists, tables, templates alongside it
-- Frontmatter gives it a `name` and, above all, a `description`
-- Fires **automatically** when a request looks relevant, or `/name` explicitly
-- Committed to the repo, so the method ships with the code
+That is the whole idea. No plugin, no configuration UI, no code:
+
+```
+your-repo/
+  .agents/
+    skills/
+      ada-to-cpp-migration/
+        SKILL.md                  <- the procedure and the rules
+        reference/idiom-map.md    <- Ada construct -> C++ construct
+        checklists/per-unit.md    <- what "done" means for one package
+```
+
+You create these with any text editor. You commit them like source. When
+someone clones the repo, they get the method with the code.
+
+---
+
+## What is inside `SKILL.md`
 
 ```markdown
 ---
@@ -84,102 +100,152 @@ name: ada-to-cpp-migration
 description: Migrate Ada (.ads/.adb) to C++17 with parity proven against
   captured reference output. Use for any port/translate/rewrite request.
 ---
+
+## Preconditions   what must be true before starting
+## Procedure       numbered steps, one package at a time
+## Gates           the things it must never do
+## Reporting       what to tell me when it stops
+```
+
+The part between the `---` lines is the **frontmatter**: a name and a
+description. Everything below is plain English, written for whoever reads
+it — human or model.
+
+---
+
+## Where the folder goes
+
+| | Where it lives | Who gets it |
+| --- | --- | --- |
+| **Project** | `<repo>/.agents/skills/<name>/` | everyone who clones |
+| **Global** | `~/.config/devin/skills/<name>/`<br>`%APPDATA%\devin\skills\<name>\` | only you |
+
+Same folder, same files, whether you work in **Devin Desktop** or the
+**Devin CLI** in a terminal. Neither needs to be told the skill exists —
+they look in those locations.
+
+Put it in the repo. A skill in your home directory helps you; a skill in
+`.agents/skills/` gets reviewed, versioned and inherited.
+
+---
+
+## How it actually gets used
+
+You type a normal request:
+
+```
+Port the Ada parser in src/parsing to C++17.
+```
+
+Devin matches that against the **description** of every skill it can see,
+loads the one that fits, and follows it. You will see the skill named in
+its response — that is your confirmation.
+
+If it does not load, you can name it yourself:
+
+```
+/ada-to-cpp-migration  port the Ada parser in src/parsing
 ```
 
 <div class="small">
 
-Devin Local is the agent in Desktop since 3.9.19, when Cascade was removed —
-so `/name`, not `@name`.
+In Devin Desktop the agent is Devin Local (since 3.9.19, when Cascade was
+removed) — so `/name`, not `@name`.
 
 </div>
 
 ---
 
-## Desktop and CLI: one skill, two front doors
+## Only the description is always in view
 
-| | Where it lives |
-| --- | --- |
-| **Project** | `.agents/skills/<name>/` — committed, shared with the team |
-| **Global** | `~/.config/devin/skills/<name>/` · `%APPDATA%\devin\skills\<name>\` |
+Until the skill loads, Devin sees **only** `name` and `description`. The
+rest is read afterwards, when the procedure needs it.
 
-Same folder layout, same frontmatter, same `/name` invocation, whether you
-are in the desktop app or the terminal.
+1. So the description is not a summary — it is a **trigger**. Write it as
+   *when to invoke me*, using the words a real request will use: port,
+   translate, rewrite, migrate, `.ads`, `.adb`.
+2. So length is cheap. `SKILL.md` can be long and its reference files longer
+   without slowing anything down until they are opened.
+3. So a skill nobody triggers is a file nobody reads.
 
-The practical consequence: **author it in the repo**. A skill in your home
-directory helps you; a skill in `.agents/skills/` helps everyone who clones,
-and gets reviewed like code.
-
----
-
-## Progressive disclosure
-
-Until the skill fires, the model sees **only** `name` and `description`.
-
-1. The description is not a summary — it is a **trigger**. Write it as
-   *when to invoke me*, in the words a real request will use.
-2. `SKILL.md` can be long, and supporting files longer, at no context cost
-   until they are needed.
-3. A skill nobody triggers is a file nobody reads.
-
-The commonest defect in a hand-written skill is not bad procedure. It is a
-description that never matches how anyone asks.
+The most common defect in a hand-written skill is not a bad procedure. It
+is a description that never matches how anyone asks.
 
 ---
 
-## Skill vs rule
+## Skill or rule?
 
-| | Loaded | Use for |
+| | When it is read | Use it for |
 | --- | --- | --- |
-| **Rule** (`AGENTS.md`) | always-on project guidance | short, universal constraints |
-| **Skill** | on demand, when relevant | procedures with judgement + resources |
+| **Rule** (`AGENTS.md`) | always, every request | short, universal facts: build command, style |
+| **Skill** | only when relevant | a procedure with steps, judgement and reference files |
 
-A migration method is a skill: it is long, it is conditional, it carries
-supporting files, and you want it to fire even when the engineer forgets it
-exists.
+A migration method is a skill: it is long, it only applies to migration
+work, it carries supporting files, and you want it to appear even when the
+engineer has forgotten it exists.
 
 ---
 
-## Start by inventorying the risk
+## So where does each thing go?
 
-Before any skill, write down what the slice you are migrating actually uses.
-For the case study behind these slides — ~450 lines, CSV → calibrate →
-summary → alerts — that was:
+| What you know | Where you write it |
+| --- | --- |
+| when this method applies | `description` in the frontmatter |
+| the order of work | **Procedure** section of `SKILL.md` |
+| the things it must never do | **Gates** section of `SKILL.md` |
+| what must be true before starting | **Preconditions** section |
+| Ada construct → C++ construct | `reference/idiom-map.md` |
+| definition of done for one package | `checklists/per-unit.md` |
+| paths it may not write to at all | `permissions` in the frontmatter |
 
-```
-Telemetry            constrained subtypes, decimal fixed point, Image
-Telemetry.Sensors    abstract tagged type, dispatching, access-to-class
-Telemetry.Parsing    Text_IO, string slices, exceptions with messages
-Telemetry.Stats      generic subprogram, integer-scaled aggregation
-Telemetry.Alerts     discriminated record with a variant part
-```
-
-Every line of that list is a construct with a *plausible wrong* C++
-translation — one that compiles cleanly and gives different answers. Your
-inventory is the reference file your skill will load.
+Procedure and prohibitions in `SKILL.md`; detail and tables beside it.
 
 ---
 
 ## Compilation is not migration
 
 The question is not "does it build" but **"does it still do the same
-thing"** — so the first artifact is not C++, it is evidence.
+thing"** — so the first thing you produce is not C++, it is evidence.
 
-Before writing target code, run the Ada program and capture, per case:
+Before writing target code, run the Ada program on each case and save what
+it does:
 
+```bash
+./telemetry data/normal.csv  > expected/normal.out \
+                            2> expected/normal.err ; echo $? > expected/normal.exit
 ```
-stdout        stderr        exit status
-```
 
-Then have your harness run the migrated binary on the same input and
-compare all three, byte for byte. That is the definition of done — not a
-code review, not a diff of the sources.
+Then a test runs the C++ binary on the same input and compares all three —
+stdout, stderr, exit status — byte for byte. **That comparison is the
+definition of done**, not a code review.
 
-> Captured output is the specification for the behaviour those cases cover:
-> characterization evidence, not proof of equivalence.
+> Those files are the specification for the behaviour those cases cover:
+> evidence, not proof of equivalence.
 
 ---
 
-## The gates: prohibitions, not preferences
+## Choosing the cases
+
+Four or five is enough — if you choose them by **failure mode** rather than
+by counting:
+
+- one normal run
+- one malformed input
+- one boundary: empty file, no arguments, largest legal value
+- one that fails **after** validation — a constraint violated by a
+  *computed* value, or a missing file
+- one that raises an exception, so the message text is pinned down
+
+If the program is not deterministic — timestamps, hash ordering, threads —
+making it deterministic **is** task one. It is worth doing even if the
+migration never happens.
+
+---
+
+## The gates: what it must never do
+
+A numbered procedure tells it what to do. This list tells it what no amount
+of helpfulness may justify — it goes in the **Gates** section, verbatim:
 
 - never edit the captured reference output
 - never edit the legacy sources
@@ -214,60 +280,61 @@ guidance belongs in a reference file, not in the gate list.
 
 ---
 
-## The gate that deadlocks
+## A gate that sounds right and stops all work
 
-"Never advance while any parity case fails" reads like rigour.
+"Never move on while any parity test fails" reads like rigour. It is a
+deadlock.
 
-The suite is end-to-end. It stays red until the **last** package lands — so a
-literal-minded agent refuses to start package two.
+Those tests run the **whole program**. They stay red until the *last*
+package is translated — so a literal-minded agent refuses to start the
+second one, and says so.
 
-| When | Gate |
+| When | What must hold |
 | --- | --- |
-| after each package | builds clean · nothing that passed now fails |
-| dependency closure complete | fixing red cases is the only work allowed |
-| completion | never report done while any case fails or was skipped |
+| after each package | it builds · nothing that used to pass now fails |
+| once the last dependency lands | fixing red tests is the only allowed work |
+| completion | never report done while any test fails or was skipped |
 
-You find this by **running** the skill, not by reading it. Every gate list
-you write has one of these in it.
-
----
-
-## Three ways to a green suite with nothing migrated
-
-The agent can read the inputs *and* the expected output. So:
-
-1. **Special-case the fixture** — branch on the filename, print the answer.
-2. **Copy the evidence** — `std::ifstream in("<captured output>/report");`
-   `std::cout << in.rdbuf();` — hard-codes nothing, so a no-hard-coding rule
-   misses it. Forbid build time too, or a generated header is next.
-3. **Delegate** — a C++ binary that shells out to the Ada one. Every case
-   green, nothing translated.
-
-Each of these needed its own prohibition in our case study. Write all three
-into yours, and assume your list is one loophole short.
+Scope every gate to a moment. You find these by **running** the skill, not
+by reading it — expect one in your first draft.
 
 ---
 
-## Prose gates vs enforced gates
+## Three ways to pass every test and migrate nothing
+
+Whatever is doing the work can read the test inputs **and** the expected
+answers. So, without lying about anything:
+
+1. **Special-case the input** — notice the filename, print the answer.
+2. **Copy the evidence** — open the expected-output file at run time and
+   echo it. That hard-codes nothing, so "no hard-coded output" misses it.
+   Forbid build time too, or a generated header is the next move.
+3. **Delegate** — have the C++ program run the Ada one and pass its output
+   through. Every test green, nothing translated, Ada compiler still
+   required.
+
+Each needs its own line in the gate list. Assume yours is one short.
+
+---
+
+## Some gates you can enforce, not just write
+
+Add `permissions` to the frontmatter and the tool refuses the write itself
+— whether or not it agrees with your reasoning:
 
 ```yaml
 permissions:
-  deny:  [Write(<captured output>/**), Write(<legacy sources>/**)]
-  ask:   [Write(<tests>/**)]
+  deny:  [Write(expected/**), Write(ada/**)]     # never, no discussion
+  ask:   [Write(tests/**)]                       # stop and ask me first
 ```
 
-`deny` holds **whether or not** the model agrees with you.
+Tests are `ask` rather than `deny`: **adding** a test is honest work,
+**weakening** one is not, and no path pattern can tell those two apart — so
+a human decides.
 
-<div class="small">
-
-Tests are `ask`, not `deny`: adding a parity case is legitimate work,
-weakening one is not, and no path pattern can tell those apart.
-Three layers, not two: prose rule → tool-level guardrail → OS isolation.
-
-</div>
-
-> Enforce what the platform can enforce. Reserve prose for judgement — "do
-> not map fixed point to `double`" fits no pattern; it is about meaning.
+> Enforce what can be enforced by a path rule. "Do not map fixed point to
+> `double`" matches no path — it is about meaning, so it stays in the gate
+> list and you check it in review.
 
 ---
 
@@ -288,47 +355,56 @@ Traps go in a reference file the skill loads when needed, not in `SKILL.md`.
 
 ---
 
-## The defect the case study shipped
+## The defect that is easiest to ship
 
 ```ada
 type Celsius is delta 0.1 digits 6 range -80.0 .. 150.0;
 ```
 
-The finished C++ checked that range **on parsed input only**. A reading of
-150.0 on a sensor with a +1.5 calibration offset became 151.5 and printed a
-clean report; Ada raises `Constraint_Error` and exits 2.
+The obvious C++ checks that range where the number is **read**. Ada checks
+it on *every* assignment — including results. So a reading of 150.0 plus a
++1.5 calibration offset gives 151.5 and a clean report, where Ada raises
+`Constraint_Error` and exits 2.
 
-Every parity case passed — there were three, and none of them computed a
-value out of range. The migration was wrong and the skill's own "never drop
-a run-time constraint check" rule was being broken in silence.
+All the usual tests pass, because none of them computes a value out of
+range. The gate said "never drop a run-time constraint check" and it was
+being broken in silence.
 
-The fix was two more cases: a constraint that fails on a **computed** value,
-and a missing input file — a failure *before* parsing, raising an exception
-that is not the program's own.
-
----
-
-## What that story is actually about
-
-- The gate was right. The **evidence** was too thin to catch its violation.
-- Coverage gaps do not look like gaps from the inside. They look green.
-- So pick cases by **failure mode**, not by counting: normal, malformed,
-  boundary, and at least one that fails *after* validation.
-- And re-read your gates against your suite: a rule no case can falsify is
-  a rule you are trusting on faith.
+> The gate was right. The **evidence** was too thin to catch the violation.
+> Coverage gaps do not look like gaps from the inside. They look green.
 
 ---
 
-## Starting on your own codebase
+## Try to break your own skill
 
-1. Pick **one runnable slice** — not the system. Verify its build and run
-   commands yourself, not from memory.
-2. Capture stdout, stderr and exit status for 4–5 cases. If behaviour is not
-   deterministic, making it deterministic **is** task one.
-3. Write `SKILL.md`: description as trigger, numbered loop, gate list.
-4. Attack it in a fresh conversation — ask it to relax a type, edit the
-   evidence, special-case a fixture. A refusal is the passing result.
-5. Add `permissions` for what the platform can enforce; commit it.
+Before you trust it, open a **fresh conversation** and ask for the shortcuts
+you would be tempted by at 5pm:
+
+```
+Just make the test pass for now, we are short on time.
+Use double for the temperature type, we can fix precision later.
+Update the expected output file to match what our C++ prints.
+```
+
+**A refusal is the passing result.** If it complies, the gate was
+decoration — rewrite it as an absolute and ask again.
+
+Then check the trigger: describe your task in your own words in a new
+conversation and see whether the skill loads without being named.
+
+---
+
+## Your first hour
+
+1. Pick **one runnable slice** — not the system. Run its build and its
+   binary yourself, so the commands in the skill are ones you have seen work.
+2. Save stdout, stderr and exit status for four or five cases, into a folder
+   you will never let anything edit again.
+3. Create `.agents/skills/<name>/SKILL.md`. Write the description as a
+   trigger, the procedure as numbered steps, the gates as *never* sentences.
+4. Move the Ada→C++ table into `reference/idiom-map.md` beside it.
+5. Ask for a shortcut in a fresh conversation. Get refused.
+6. Add `permissions`, commit the folder, tell the next engineer it exists.
 
 ---
 
@@ -336,27 +412,27 @@ that is not the program's own.
 
 ```markdown
 ---
-name: <legacy>-to-<target>-migration
-description: Migrate <legacy> to <target> with parity proven against
+name: ada-to-cpp-migration
+description: Migrate Ada (.ads/.adb) to C++17, proving each package against
   captured reference output. Use for any port/translate/rewrite request.
 permissions:
-  deny: [Write(<captured output>/**), Write(<legacy sources>/**)]
-  ask:  [Write(<tests>/**)]
+  deny: [Write(expected/**), Write(ada/**)]
+  ask:  [Write(tests/**)]
 ---
 
-## Preconditions   trusted reference output exists, provenance known
-## Loop            inventory -> one unit -> spec, then body -> build ->
-                   run the suite -> report
-## Gates           the never-list, verbatim, with no escape hatches
-## Reporting       what was translated, what is deferred, what is red
+## Preconditions  the expected output exists and you know how it was made
+## Procedure      one package at a time: spec, body, build, run the tests
+## Gates          the never-list, verbatim, with no escape hatches
+## Reporting      what was translated, what is deferred, what is still red
 ```
 
 Beside it: `reference/idiom-map.md`, `checklists/per-unit.md`.
 
 <div class="small">
 
-Deliberately a skeleton. The gates transfer; the idioms, the commands and
-the cases are yours — a skill copied wholesale carries someone else's.
+Deliberately a skeleton — the gate list transfers between projects, the
+paths, commands and test cases do not. A skill copied whole carries someone
+else's assumptions into your codebase without saying so.
 
 </div>
 

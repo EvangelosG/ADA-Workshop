@@ -1,273 +1,283 @@
 # Talk track — 30-minute presentation
 
-Speaker notes for `slides.pdf` in this folder (20 slides, 30 minutes).
-Timings are cumulative and assume you start on time. This is the *no-lab*
-edition: nobody in the room types, so the pacing risk is the opposite of the
-workshop's — there is no natural pause, and it is easy to arrive at the last
-slide with six minutes left and no plan for them.
+Speaker notes for `slides.pdf` in this folder (23 slides, 30 minutes).
+Timings are cumulative and assume you start on time.
 
-A hands-on version exists — `workshop/lab.html` (repo-based) and
-`workshop/standalone.html` (attendees' own codebase) — but do not try to run
-this deck and a lab in the same 30 minutes. Assume this deck is the only
-exposure the room gets, and mention the lab only if you can actually offer
-it to them.
+**Who this is written for.** Engineers who know Ada and have a migration in
+front of them, and who may never have used an AI coding tool. Assume nothing:
+the first third of the talk is "a skill is a folder with a markdown file in
+it, and here is where it goes". Resist the urge to skip that because it feels
+obvious — it is the part that makes the rest usable.
 
-**Budget.** Skills mechanics 0:00–0:09 · evidence 0:09–0:15 · gates
-0:15–0:25 · take-home 0:25–0:30. If you are behind, cut the idiom-map slide
-and the skill-vs-rule slide, in that order. Do **not** cut the loopholes
-slide or the defect story; they are the reason the talk is not a features
-tour.
+**Nothing on screen requires a repository of ours.** Every path, filename and
+prompt in the deck is invented and generic on purpose, so the room never has
+to wonder what they are missing. If someone asks whether there is a worked
+example they can read, the honest answer is that the method is the
+deliverable and the skeleton on slide 22 is the starting point.
+
+**Budget.** What a skill is 0:00–0:14 · evidence 0:14–0:18 · gates 0:18–0:25 ·
+take-home 0:25–0:30. If you are behind, cut the idiom-map slide and the
+skill-vs-rule slide, in that order. Do **not** cut the loopholes slide, the
+defect slide or "your first hour".
 
 ---
 
 ## 0:00 — Title
 
-One sentence on why you are the one giving this talk: you built the
-migration, and the interesting part is what went wrong.
+Say what the next 30 minutes buys them: a way to write down a migration
+method once, so that it is applied the same way on package 200 as on package
+one.
 
-Set the expectation immediately that this is not a product demo. The
-audience is engineers with Ada exposure; they have seen migration projects
-fail and are, correctly, sceptical.
+Set the expectation that this is not a product demo, and not a live coding
+session. The audience has seen migration projects fail and is, correctly,
+sceptical.
 
 ## 0:01 — What you should leave with
 
-Tell them what they walk out with: the skeleton of the skill and the list of
-things it must never do, both on the handout. If your room could do the lab
-later, say so here — it changes how they listen. If not, do not raise it;
-this is a complete talk on its own terms.
+Two things, and say them plainly: what a skill is as files on disk, and how
+to write one for their own Ada codebase.
 
-> "Everything here comes out of building one of these and then finding out
-> it was wrong. The last third of the talk is a defect we shipped."
+Promise the ending explicitly — a skeleton and a first-hour plan — so nobody
+spends the talk wondering whether it becomes practical.
 
-Say once, and only once, where the examples come from: a migration we built
-as a case study. After this slide the room should never need to wonder
-whether they are missing a repository — every instruction from here is
-phrased for their codebase.
+## 0:02 — The problem with "just prompt it"
 
-## 0:03 — The problem with "just prompt it"
+The point is repetition, not capability. Nobody doubts a model can translate
+one package.
 
-The point is repetition, not capability. Nobody in the room doubts that a
-model can translate one package.
+Ask for a show of hands: who has a migration in front of them right now? It
+is the only audience interaction in the deck and it tells you how concrete to
+be for the next 25 minutes.
 
-Ask for a show of hands: who has a migration in front of them right now?
-It is the only audience interaction in the deck and it tells you how
-concrete to be for the next 25 minutes.
+The sentence to land: a fresh conversation has no memory of the last one, so
+without a written method you re-derive it every time and get a slightly
+different answer every time.
 
-## 0:04 — Skills in 90 seconds
+## 0:04 — A skill is a folder of markdown
 
-Keep to 90 seconds. Read the frontmatter aloud, and land the description as
-a *trigger* rather than documentation — you return to it twice later.
+Slow down here. For a room new to these tools this is the slide that
+demystifies everything.
 
-If someone asks about Cascade or `@name`: it was removed in Desktop 3.9.19,
-Devin Local is the agent, and skills are invoked with `/name`.
+Read the tree aloud, literally: a hidden `.agents` folder in the repo, a
+`skills` folder inside it, one folder per skill, and inside that a file
+called `SKILL.md` plus whatever else you want beside it.
 
-## 0:06 — Desktop and CLI
+Then the two reassurances: you make these with any text editor, and you
+commit them like source. There is nothing to install and nothing to register.
 
-This is the slide people came for if they use the terminal. It is short on
-purpose: the honest answer is that it is the same folder and the same file,
-which is the good news.
+## 0:06 — What is inside `SKILL.md`
 
-The line to land is *author it in the repo*. A skill in a home directory is
-a personal shortcut; a skill in `.agents/skills/` is reviewable, versioned,
-and shows up for the next engineer who clones.
+Name the frontmatter out loud — "the bit between the three dashes" — because
+it is the only piece of syntax in the talk. Everything else is prose with
+headings.
 
-## 0:07 — Progressive disclosure
+The four headings are the shape of every migration skill you will write:
+preconditions, procedure, gates, reporting. You come back to them on slide 10
+and again on slide 22.
 
-The mechanism explains three things at once: why the description matters so
-much, why supporting files are free, and why a beautiful `SKILL.md` with a
-bad description effectively does not exist.
+## 0:07 — Where the folder goes
 
-Give them the test to run themselves later: open a fresh conversation, type
-one vague sentence — *port the Ada telemetry program in this repo to C++* —
-and see whether the skill loads. A beautiful `SKILL.md` with a description
-nobody's phrasing matches effectively does not exist, and that is the single
-most common defect in a hand-written skill.
+Two locations, one recommendation. In the repo is the answer; a global skill
+in your home directory helps only you.
 
-## 0:08 — Skill vs rule
+The line that matters for a mixed room: this is the same folder and the same
+file whether you use Devin Desktop or the Devin CLI in a terminal. Neither
+needs to be told the skill exists.
 
-Thirty seconds. It exists to stop the "why isn't this just AGENTS.md?"
-question from arriving later, at a worse moment.
+## 0:09 — How it actually gets used
 
-## 0:09 — Start by inventorying the risk
+The mechanics question everyone is quietly holding. Answer it concretely: you
+type a normal sentence, Devin matches it against the descriptions it can see,
+loads the one that fits, and you see the skill named in the response.
 
-This is the first slide about *their* work, so frame it that way: the list
-is what an inventory looks like, and theirs is the deliverable. Do not tour
-our code — the room has never seen it and does not need to.
+Then the fallback — slash the name to invoke it deliberately. If anyone asks
+about Cascade or `@name`: removed in Desktop 3.9.19, Devin Local is the agent,
+so slash.
 
-The load-bearing sentence is the last one: every construct on that list has
-a plausible wrong translation that compiles.
+Be honest about the limit: matching is a judgement about relevance, not a
+keyword search, so it is not guaranteed. That is exactly why the next slide
+matters.
 
-Name one for texture — `Integer'Image` puts a leading blank on
-non-negatives, so a C++ port that "obviously" prints the number produces
-different bytes and every test that looks at stdout goes red.
+## 0:10 — Only the description is always in view
 
-## 0:11 — Compilation is not migration
+The mechanism explains three things at once: why the description carries all
+the weight, why long reference files are free, and why a beautiful `SKILL.md`
+with a vague description effectively does not exist.
+
+Give them the check to run later: open a fresh conversation, describe the task
+the way they normally would, and see whether the skill loads unprompted.
+
+## 0:12 — Skill or rule?
+
+Thirty seconds. It exists so the "why isn't this just `AGENTS.md`?" question
+does not arrive later, at a worse moment.
+
+Rule: short, always read, universally true. Skill: long, conditional, carries
+files, read when relevant.
+
+## 0:13 — So where does each thing go?
+
+This is the slide that answers the question a beginner is actually asking:
+*I understand the ideas, but where does any of this get written down?*
+
+Do not read the whole table. Point at three rows — the gate list goes in the
+Gates section of `SKILL.md`, the Ada→C++ table goes in a file beside it, the
+paths nothing may write to go in the frontmatter — and move on.
+
+## 0:14 — Compilation is not migration
 
 Slow down. This is the spine of the talk.
 
-> "Before you write a line of C++, run the Ada program and capture stdout,
-> stderr and the exit status for each case. Those files are the spec."
+> "Before you write a line of C++, run the Ada program and save what it did:
+> stdout, stderr, exit status. Those files are the specification."
 
-Keep it in the second person — this is the instruction they take away, not a
-report on what we did. Then qualify it before an engineer in the room does
-it for you: a handful of cases is characterization evidence for the
-behaviour they cover, not proof that the two programs are equivalent.
-Saying it yourself buys the credibility you spend on the defect story later.
+Read the shell line literally; it is the most concrete instruction in the
+deck and for many rooms it is the takeaway. Then qualify it before an
+engineer does it for you: a handful of cases is evidence for the behaviour
+those cases cover, not proof the two programs are equivalent. Saying it
+yourself buys the credibility you spend on the defect slide.
 
-## 0:13 — The gates
+## 0:16 — Choosing the cases
 
-Read the list, do not paraphrase it. Ten prohibitions takes forty seconds
-and the cadence is the point — every one is *never*, none is *prefer*.
+The list is the deliverable; the last two bullets are the ones people miss —
+a failure *after* validation, and an exception whose message text is now
+pinned down as observable output.
 
-If you want the audience beat from the lab and you have the time, ask before
-you reveal: *you are about to trust this across hundreds of files — what are
-three things it must never be allowed to do to get a green test?* Budget two
-minutes and only do it if you are at or ahead of 0:13.
+If the room's programs are not deterministic, this is where they will say so.
+Agree loudly: making it deterministic is task one, and it is worth doing even
+if the migration is cancelled.
 
-## 0:15 — Why *never* and not *prefer*
+## 0:18 — The gates: what it must never do
 
-The table is the takeaway slide people photograph. Give it a beat.
+Read the list, do not paraphrase it. Ten prohibitions takes forty seconds and
+the cadence is the point — every one is *never*, none is *prefer*.
 
-The last line matters for their own authoring: if you cannot phrase it as an
-absolute, it is guidance, and guidance goes in a reference file where it
-does not dilute the gates.
+Remind them where it goes: verbatim, into the Gates section.
 
-## 0:17 — The gate that deadlocks
+If you are at or ahead of 0:18, ask first: *you are about to trust this
+across hundreds of files — name three things it must never do to get a green
+test.* Two minutes, and it makes the next three slides land harder.
 
-Tell it as a mistake, because it was one. "Never advance while any parity
-case fails" was in the first draft of the case-study skill, it sounds like
-discipline, and an obedient agent would have refused to start the second
-package — the suite is end-to-end and cannot go green until the last one
-lands.
+## 0:19 — Why *never* and not *prefer*
 
-The fix is scope, not softening: per-package, at dependency closure, at
-completion. Land the general lesson — **you find this by running the skill,
-not by reading it** — because it is the one that transfers to their gate
-lists.
+The table is the slide people photograph. Give it a beat.
 
-## 0:19 — Three ways to a green suite
+The authoring lesson: if you cannot phrase it as an absolute, it is guidance,
+and guidance goes in a reference file where it does not dilute the gates.
 
-The best slide in the deck. Take three minutes, one per route.
+## 0:20 — A gate that sounds right and stops all work
 
-1. Special-casing the fixture is the one people expect.
-2. Copying the captured output at run time is the one that gets past a
-   no-hard-coding rule, because it hard-codes nothing. Read the two lines of
-   C++ aloud. Then note that if you forbid only run time, a build-time
-   generated header is the next move — which is why the rule has to name
-   both.
-3. Delegating to the Ada binary is the one that makes people laugh, and it
-   is the most dangerous: every case green, nothing migrated, and the
-   artifact still depends on the compiler you were trying to retire.
+Tell it as a mistake, because it is a common one. "Never move on while any
+test fails" sounds like discipline; the tests exercise the whole program, so
+they stay red until the last package lands, and a literal-minded agent
+refuses to start the second one.
 
-Close with: assume your list is one loophole short. That is the posture,
-not a criticism of any particular list.
+The fix is scope, not softening: one gate per moment. Land the general lesson
+— you find these by running the skill, not by reading it — because that is
+what transfers to their own gate lists.
 
-## 0:22 — Prose vs enforced
+## 0:22 — Three ways to pass every test and migrate nothing
 
-Sequence matters: you have just spent three minutes on gates that are only
-prose. Now show the ones the platform enforces.
+The best slide in the deck. Take two minutes, one per route.
 
-`deny` holds whether or not the model agrees. Explain why tests are `ask` —
-adding a parity case is legitimate, weakening one is not, and a path pattern
-cannot tell those apart, so a human decides.
+1. Special-casing the input is the one people expect.
+2. Reading the expected-output file at run time is the one that slips past a
+   no-hard-coding rule, because it hard-codes nothing. Say that if you forbid
+   only run time, a generated header at build time is the next move — which
+   is why the rule names both.
+3. Delegating to the Ada binary is the one that gets a laugh, and it is the
+   worst: every test green, nothing translated, and the artifact still needs
+   the compiler you were trying to retire.
 
-Be accurate about the limit: this is a tool-level guardrail, not OS
-isolation, and it does not govern arbitrary side effects. And "do not map
-fixed point to `double`" cannot be a permission at all — it is a judgement
-about meaning, so it stays prose. That is the takeaway: enforce what can be
-enforced, reserve prose for what cannot.
+Close with: assume your list is one loophole short. That is a posture, not a
+criticism of any particular list.
 
-## 0:24 — The traps
+## 0:24 — Some gates you can enforce, not just write
 
-Ninety seconds, and only if you are on time. Point at the fixed-point row
+Sequence matters: you have just spent two minutes on rules that hold only
+because the model cooperates. Now show the ones the tool enforces.
+
+`deny` refuses the write regardless of the argument being made. Explain why
+tests are `ask` — adding a test is honest, weakening one is not, and a path
+pattern cannot tell them apart, so a human decides.
+
+Be accurate about the limit: this governs file writes, not every possible
+side effect, and "do not map fixed point to `double`" cannot be a permission
+at all because it is about meaning.
+
+## 0:25 — The traps are the whole job
+
+Ninety seconds, and only if you are on time. Point at the fixed-point row,
 because the next slide is about it.
 
-The authoring lesson: this table lives in a reference file the skill loads
-when it needs it, not in `SKILL.md`. Procedure in the skill, domain detail
-alongside it.
+The authoring lesson: this table lives in a file beside `SKILL.md`, loaded
+when needed. Procedure in the skill, domain detail alongside.
 
-## 0:25 — The defect the case study shipped
+## 0:26 — The defect that is easiest to ship
 
-Tell this one straight, including that it was ours. Admitting it is what
-makes the rest of the deck credible.
+Tell it slowly; it is the most memorable minute in the talk.
 
-The range check was on parsed input only. A reading of 150.0 on a sensor
-with a +1.5 offset became 151.5 and printed a clean report, where Ada raises
-`Constraint_Error` and exits 2. Every parity case passed — there were three,
-and none computed a value out of range. The migration was violating the
-skill's own "never drop a run-time constraint check" rule, and the suite
-could not see it.
+Ada checks a subtype constraint on every assignment, including computed
+results. The natural C++ checks it where the value is read. So a legal
+reading plus a legal offset produces an illegal value, a clean report and a
+zero exit status, where Ada raises `Constraint_Error` and exits 2.
 
-Do not rush to the moral; let it sit for a second. Then: the fix was two new
-cases — a constraint that fails on a *computed* value, and a missing file,
-which fails before parsing with an exception that is not the program's own.
+Then the twist: every test passed, because no test computed a value out of
+range. The gate was right and the evidence was too thin to catch the
+violation. If you are asked whether this is hypothetical, say that it is the
+mistake this kind of migration makes most often, and that it is worth
+stealing as a test case on day one.
 
-## 0:24 — What that story is about
+## 0:27 — Try to break your own skill
 
-The four bullets are the actual thesis of the talk. Read them.
+The most actionable slide for a room that has never used these tools. Read
+the three shortcut requests aloud in a tired voice; they should recognise
+themselves.
 
-The one to emphasise is the last: a rule no test case can falsify is a rule
-you are trusting on faith. It reframes test design as gate design, which is
-what you want them doing in their own repo.
+**A refusal is the passing result.** Say it twice. If it complies, the gate
+was decoration.
 
-## 0:26 — Starting on your own codebase
+## 0:28 — Your first hour
 
-Practical, deliberately small. The commonest failure is scope: someone
-tries to characterise the whole system and never gets to step three.
+Six numbered steps. Read them; do not elaborate. This is the slide people
+photograph on the way out.
 
-Step 2 is where their real work is. If the legacy program is not
-deterministic — timestamps, hash ordering, tasking — making it deterministic
-is task one, and it is worth doing even if the migration never happens.
+If the room is going to do one thing, it is steps 1 and 2 — a runnable slice
+and saved output — because everything else depends on them.
 
-Step 4 is the part they will skip and shouldn't: attack the skill in a fresh
-conversation and treat a refusal as the passing result.
+## 0:29 — A skeleton to start from
 
-## 0:28 — A skeleton to start from
+Say clearly that it is a skeleton on purpose: the gate list transfers between
+projects, the paths and commands do not, and a skill copied whole carries
+somebody else's assumptions into their codebase without announcing it.
 
-Do not read the YAML. Say why it is a skeleton and not our finished skill:
-the gates transfer between migrations, and nothing else does. A skill
-copied wholesale brings someone else's fixture names, someone else's build
-commands and someone else's domain, and reads as authoritative while doing
-it.
+Hand the page out here, not at the start — it is the deck's argument in
+reading form, plus the idiom map, the checklist and the full skeleton.
 
-The handout carries the same skeleton in full, with the procedure filled
-in, so this slide is a pointer rather than a reference.
+## 0:30 — The three things
 
-## 0:29 — The three things
-
-Close on the deck's own words and stop. Do not add a summary of the summary.
-
-Hand out the page here, not at the start — it is the deck's argument in
-reading form, plus the idiom map, the checklist and the skeleton.
-
-If the hands-on lab is actually available to this room, this is the moment
-to point at it, and to say what it adds: in the lab they author the skill
-themselves and watch their own gates fold under pressure, which no slide
-can do.
+Close on the deck's own words and stop. Do not summarise the summary.
 
 ---
 
-## Questions you should expect
+## If you are asked
 
-**"How is this different from a long prompt?"** It persists, it is
-versioned, it is reviewed like code, it loads only when relevant, and it can
-carry files. A prompt is a conversation; a skill is an asset.
+**"Does this work with any other agent?"** The format described here is what
+Devin Desktop and the Devin CLI read. The method — evidence first,
+prohibitions, staged gates — is not tool-specific.
 
-**"Won't the model just ignore the gates?"** Sometimes — which is why you
-probe them, and why anything the platform can enforce goes in
-`permissions` rather than prose. Be honest here; overclaiming loses the
-room faster than admitting the limit.
+**"How long is a real skill?"** A page or two of `SKILL.md`, plus reference
+files as long as they need to be. Length in `SKILL.md` costs attention;
+length in a reference file does not, because it is read only when needed.
 
-**"Five test cases is nothing."** Correct, and that is the defect story.
-The number is a decision you make deliberately per subsystem; the discipline
-is picking by failure mode rather than by count.
+**"What if our program is not deterministic?"** Then that is the project,
+before the migration. Pin timestamps, order iteration, remove concurrency
+from the harness. It is worth doing on its own merits.
 
-**"Can it do the whole migration unattended?"** Not the question the talk
-answers. What the skill buys you is that the parts it does are checkable,
-and that it stops rather than guessing. Offer the deadlock story as evidence
-that "stops" is a real behaviour, not an aspiration.
+**"Can it just translate the whole thing and we review it?"** Review does not
+scale past a few thousand lines and does not catch behaviour, only shape. The
+comparison against saved output is what catches behaviour.
 
-**"What about tasking / protected objects / real-time?"** Out of scope for
-the example, and genuinely harder: the golden-output technique needs
-deterministic observable behaviour, so concurrency usually means building a
-deterministic harness first.
+**"What does it cost to be wrong here?"** A migration that compiles, passes
+review and quietly computes different numbers is more expensive than one that
+never shipped. That is the argument for gates.
