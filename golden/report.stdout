@@ -1,0 +1,23 @@
+TELEMETRY REPORT
+================
+readings: 15
+
+sensors:
+  boiler-inlet [thermocouple#7]
+  cabin-air [thermistor#12]
+  exhaust [thermocouple#31]
+
+calibrated summary (good readings only):
+  count: 13
+  min:   17.1
+  max:   140.0
+  mean:  87.6
+  suspect readings: 1
+
+alerts:
+  t=7200 sensor 7: above 90.0 (90.9)
+  t=10800 sensor 7: above 90.0 (92.7)
+  t=18000 sensor 7: above 90.0 (93.5)
+  t=7200 sensor 12: below 18.0 (17.1)
+  t=10800 sensor 12: below 18.0 (16.5)
+  t=14400 sensor 31: stuck at 140.0

@@ -1,0 +1,4 @@
+# the third data line has a sensor id outside Sensor_Id'Range
+7,3600,88.5,G
+12,3600,19.2,G
+120,3600,21.0,G
