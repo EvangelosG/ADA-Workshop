@@ -134,9 +134,9 @@ footer {
 enough detail to be useful a week later, and carries the reference material
 — the idiom map and the per-package checklist — inline, so it works on its
 own with nothing to clone and nothing to install.</p>
-<p>There is a hands-on version of this material. This page is not it: nothing
-here asks you to run our code. Everything below applies to an Ada codebase
-you already have and are already allowed to build.</p>
+<p>Nothing here asks you to run our code, and nothing here is specific to our
+sample: everything below applies to an Ada codebase you already have and
+are already allowed to build.</p>
 <h2 id="what-a-skill-is">What a skill is</h2>
 <p>A skill is a folder with a <code>SKILL.md</code> in it, plus whatever supporting files
 the procedure needs — checklists, mapping tables, templates. The frontmatter
@@ -465,10 +465,10 @@ an exception that is not the program's own.</p>
       output at build or run time; nothing invokes, links to or wraps the
       legacy program</li>
 </ul>
-<h2 id="monday-morning">Monday morning</h2>
+<h2 id="starting-on-your-own-codebase">Starting on your own codebase</h2>
 <ol>
 <li>Pick <strong>one runnable slice</strong> — not the system. Verify its build and run
-   commands today, not from memory.</li>
+   commands yourself, not from memory.</li>
 <li>Capture stdout, stderr and exit status for four or five cases chosen by
    failure mode. If the program is not deterministic — timestamps, hash
    ordering, concurrency — making it deterministic is task one, and it is
@@ -484,6 +484,50 @@ an exception that is not the program's own.</p>
 <li>Add <code>permissions</code> for what the platform can enforce, and commit the
    folder so the method ships with the code.</li>
 </ol>
+<h2 id="a-skeleton-to-start-from">A skeleton to start from</h2>
+<p>This is deliberately a skeleton rather than a finished skill. The gates
+transfer between migrations; the idioms, the build commands and the cases do
+not, and a skill copied wholesale carries someone else's assumptions into
+your codebase without saying so.</p>
+<pre><code class="language-markdown">---
+name: &lt;legacy&gt;-to-&lt;target&gt;-migration
+description: Migrate &lt;legacy&gt; to &lt;target&gt; with parity proven against
+  captured reference output. Use for any port/translate/rewrite request.
+permissions:
+  deny: [Write(&lt;reference output&gt;/**), Write(&lt;legacy sources&gt;/**)]
+  ask:  [Write(&lt;tests&gt;/**)]
+---
+
+# &lt;Legacy&gt; to &lt;target&gt; migration
+
+## Preconditions
+Trusted reference output exists and its provenance is known; the parity
+suite runs and is red for the expected reason. If either is untrue, stop
+and report — do not begin translating.
+
+## Procedure
+1. Inventory the units and order them by dependency.
+2. Take the next unit. Translate its interface, then its implementation.
+3. Build the whole tree at the project's warning level.
+4. Run the parity suite. Apply the per-unit checklist.
+5. Report the unit, its deferred obligations, and the suite state. Then
+   the next unit.
+
+## Gates
+&lt;the never-list, verbatim, with no escape hatches — the eight above,
+plus the ones specific to your languages&gt;
+
+## Stage gates
+&lt;per unit / dependency closure / completion, as above&gt;
+
+## Reporting format
+What was translated, what is deferred and why, which cases are red.
+---
+</code></pre>
+<p>Beside it, in the same folder: <code>reference/idiom-map.md</code> with the mapping
+table for your language pair, and <code>checklists/per-unit.md</code> with the
+definition of done. <code>SKILL.md</code> holds the procedure; the detail lives next to
+it and is read when it is needed.</p>
 <h2 id="the-three-things">The three things</h2>
 <ol>
 <li>The <strong>description</strong> decides whether the skill exists in practice.</li>

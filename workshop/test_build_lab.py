@@ -331,6 +331,34 @@ def test_talk_deck_covers_the_gates_it_cannot_demonstrate(talk_slides: str) -> N
         assert claim in talk_slides, claim
 
 
+def test_talk_edition_hands_over_a_skeleton_not_a_finished_skill(
+    talk_slides: str, handout_source: str
+) -> None:
+    """The room leaves with a template. A copyable finished skill would carry
+    our fixture names and our domain into codebases that have neither.
+    """
+    for text in (talk_slides, handout_source):
+        assert "<legacy>-to-<target>-migration" in text
+        assert "Write(<reference output>/**)" in text
+        assert "skeleton" in text.lower()
+
+
+def test_talk_edition_stands_alone(talk_slides: str, handout_source: str) -> None:
+    """For most of this audience the deck and the handout are the whole of
+    their exposure, so neither may position itself as the lesser half of a
+    lab they will never attend.
+    """
+    for text in (talk_slides, handout_source):
+        assert "hands-on version" not in text
+        assert "this is not it" not in text.lower()
+
+
+def test_talk_deck_is_legible_in_a_dark_room(talk_slides: str) -> None:
+    front_matter = talk_slides.split("---", 2)[1]
+    assert "background: #10131a" in front_matter
+    assert "color: #dfe4ec" in front_matter
+
+
 def test_talk_deck_and_handout_agree_on_the_platform(
     talk_slides: str, handout_source: str
 ) -> None:

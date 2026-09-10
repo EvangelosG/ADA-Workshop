@@ -4,11 +4,33 @@ theme: default
 paginate: true
 size: 16:9
 style: |
-  section { font-size: 26px; }
+  section {
+    background: #10131a;
+    color: #dfe4ec;
+    font-size: 26px;
+  }
   section.lead h1 { font-size: 54px; }
-  code { font-size: 0.85em; }
-  table { font-size: 0.8em; }
-  .small { font-size: 0.78em; }
+  h1, h2, h3 { color: #ffffff; }
+  section.lead h2, section.lead h3 { color: #7aa2f7; }
+  strong { color: #ffffff; }
+  a { color: #7aa2f7; }
+  code {
+    font-size: 0.85em;
+    background: #171b24;
+    color: #dfe4ec;
+    border: 1px solid #262c38;
+    border-radius: 4px;
+  }
+  pre { background: #0c0f15; border: 1px solid #262c38; border-radius: 8px; }
+  pre code, pre code span { background: none; border: 0; color: #dfe4ec; }
+  table { font-size: 0.8em; border-collapse: collapse; }
+  th, td { border: 1px solid #262c38; }
+  th { background: #171b24; color: #ffffff; }
+  tbody tr td { background: #10131a; color: #dfe4ec; }
+  tbody tr:nth-child(even) td { background: #141821; }
+  blockquote { color: #f0b866; }
+  section::after { color: #99a2b3; }
+  .small { font-size: 0.78em; color: #b8c0cf; }
 ---
 
 <!-- _class: lead -->
@@ -17,7 +39,7 @@ style: |
 
 ## Devin Desktop, the Devin CLI, and an Ada → C++ worked example
 
-30 minutes · presentation · no lab required
+30 minutes
 
 ---
 
@@ -30,8 +52,9 @@ A **method**, illustrated by a migration we already built and broke.
 - the gates a migration skill needs, and the three ways round them we found
 - a real defect our own test suite missed, and why
 
-**Not** in this session: you typing. There is a hands-on version of this
-lab; this is the version for a room that cannot run our code.
+Everything here applies to an Ada codebase you already have and are already
+allowed to build. You leave with the skeleton of the skill and the list of
+things it must never do.
 
 ---
 
@@ -292,16 +315,46 @@ is not the program's own.
 
 ---
 
-## Monday morning, on your own codebase
+## Starting on your own codebase
 
 1. Pick **one runnable slice** — not the system. Verify its build and run
-   commands today.
+   commands yourself, not from memory.
 2. Capture stdout, stderr and exit status for 4–5 cases. If behaviour is not
    deterministic, making it deterministic **is** task one.
 3. Write `SKILL.md`: description as trigger, numbered loop, gate list.
 4. Attack it in a fresh conversation — ask it to relax a type, edit the
    evidence, special-case a fixture. A refusal is the passing result.
 5. Add `permissions` for what the platform can enforce; commit it.
+
+---
+
+## A skeleton to start from
+
+```markdown
+---
+name: <legacy>-to-<target>-migration
+description: Migrate <legacy> to <target> with parity proven against
+  captured reference output. Use for any port/translate/rewrite request.
+permissions:
+  deny: [Write(<reference output>/**), Write(<legacy sources>/**)]
+  ask:  [Write(<tests>/**)]
+---
+
+## Preconditions   trusted reference output exists, provenance known
+## Loop            inventory -> one unit -> spec, then body -> build ->
+                   run the suite -> report
+## Gates           the never-list, verbatim, with no escape hatches
+## Reporting       what was translated, what is deferred, what is red
+```
+
+Beside it: `reference/idiom-map.md`, `checklists/per-unit.md`.
+
+<div class="small">
+
+Deliberately a skeleton. The gates transfer; the idioms, the commands and
+the cases are yours — a skill copied wholesale carries someone else's.
+
+</div>
 
 ---
 

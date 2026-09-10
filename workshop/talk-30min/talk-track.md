@@ -1,14 +1,16 @@
 # Talk track — 30-minute presentation
 
-Speaker notes for `slides.pdf` in this folder (18 slides, 30 minutes).
+Speaker notes for `slides.pdf` in this folder (20 slides, 30 minutes).
 Timings are cumulative and assume you start on time. This is the *no-lab*
 edition: nobody in the room types, so the pacing risk is the opposite of the
 workshop's — there is no natural pause, and it is easy to arrive at the last
 slide with six minutes left and no plan for them.
 
-The full hands-on version is `workshop/lab.html` (repo-based) and
-`workshop/standalone.html` (attendees' own codebase). Do not try to run this
-deck and a lab in the same 30 minutes.
+A hands-on version exists — `workshop/lab.html` (repo-based) and
+`workshop/standalone.html` (attendees' own codebase) — but do not try to run
+this deck and a lab in the same 30 minutes. Assume this deck is the only
+exposure the room gets, and mention the lab only if you can actually offer
+it to them.
 
 **Budget.** Skills mechanics 0:00–0:09 · evidence 0:09–0:15 · gates
 0:15–0:25 · take-home 0:25–0:30. If you are behind, cut the idiom-map slide
@@ -29,8 +31,10 @@ fail and are, correctly, sceptical.
 
 ## 0:01 — What this session is
 
-Say plainly that there is a hands-on version and this is not it. If your
-room *could* do the lab later, tell them now — it changes how they listen.
+Tell them what they walk out with: the skeleton of the skill and the list of
+things it must never do, both on the handout. If your room could do the lab
+later, say so here — it changes how they listen. If not, do not raise it;
+this is a complete talk on its own terms.
 
 > "Everything here comes out of building the thing and then finding out it
 > was wrong. The last third of the talk is a defect in our own answer key."
@@ -183,15 +187,15 @@ Do not rush to the moral; let it sit for a second. Then: the fix was two new
 cases — a constraint that fails on a *computed* value, and a missing file,
 which fails before parsing with an exception that is not the program's own.
 
-## 0:27 — What that story is about
+## 0:24 — What that story is about
 
 The four bullets are the actual thesis of the talk. Read them.
 
 The one to emphasise is the last: a rule no test case can falsify is a rule
 you are trusting on faith. It reframes test design as gate design, which is
-what you want them doing on Monday.
+what you want them doing in their own repo.
 
-## 0:28 — Monday morning
+## 0:26 — Starting on your own codebase
 
 Practical, deliberately small. The commonest failure is scope: someone
 tries to characterise the whole system and never gets to step three.
@@ -203,13 +207,28 @@ is task one, and it is worth doing even if the migration never happens.
 Step 4 is the part they will skip and shouldn't: attack the skill in a fresh
 conversation and treat a refusal as the passing result.
 
+## 0:28 — A skeleton to start from
+
+Do not read the YAML. Say why it is a skeleton and not our finished skill:
+the gates transfer between migrations, and nothing else does. A skill
+copied wholesale brings someone else's fixture names, someone else's build
+commands and someone else's domain, and reads as authoritative while doing
+it.
+
+The handout carries the same skeleton in full, with the procedure filled
+in, so this slide is a pointer rather than a reference.
+
 ## 0:29 — The three things
 
 Close on the deck's own words and stop. Do not add a summary of the summary.
 
-If you have the hands-on lab available, this is the moment to point at it,
-and to say what it adds: in the lab they author the skill themselves and
-watch their own gates fold under pressure, which no slide can do.
+Hand out the page here, not at the start — it is the deck's argument in
+reading form, plus the idiom map, the checklist and the skeleton.
+
+If the hands-on lab is actually available to this room, this is the moment
+to point at it, and to say what it adds: in the lab they author the skill
+themselves and watch their own gates fold under pressure, which no slide
+can do.
 
 ---
 

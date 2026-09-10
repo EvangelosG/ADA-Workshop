@@ -5,9 +5,9 @@ enough detail to be useful a week later, and carries the reference material
 — the idiom map and the per-package checklist — inline, so it works on its
 own with nothing to clone and nothing to install.
 
-There is a hands-on version of this material. This page is not it: nothing
-here asks you to run our code. Everything below applies to an Ada codebase
-you already have and are already allowed to build.
+Nothing here asks you to run our code, and nothing here is specific to our
+sample: everything below applies to an Ada codebase you already have and
+are already allowed to build.
 
 ## What a skill is
 
@@ -256,10 +256,10 @@ The traps are the entries that compile cleanly and give wrong answers.
       output at build or run time; nothing invokes, links to or wraps the
       legacy program
 
-## Monday morning
+## Starting on your own codebase
 
 1. Pick **one runnable slice** — not the system. Verify its build and run
-   commands today, not from memory.
+   commands yourself, not from memory.
 2. Capture stdout, stderr and exit status for four or five cases chosen by
    failure mode. If the program is not deterministic — timestamps, hash
    ordering, concurrency — making it deterministic is task one, and it is
@@ -274,6 +274,55 @@ The traps are the entries that compile cleanly and give wrong answers.
    again.
 5. Add `permissions` for what the platform can enforce, and commit the
    folder so the method ships with the code.
+
+## A skeleton to start from
+
+This is deliberately a skeleton rather than a finished skill. The gates
+transfer between migrations; the idioms, the build commands and the cases do
+not, and a skill copied wholesale carries someone else's assumptions into
+your codebase without saying so.
+
+```markdown
+---
+name: <legacy>-to-<target>-migration
+description: Migrate <legacy> to <target> with parity proven against
+  captured reference output. Use for any port/translate/rewrite request.
+permissions:
+  deny: [Write(<reference output>/**), Write(<legacy sources>/**)]
+  ask:  [Write(<tests>/**)]
+---
+
+# <Legacy> to <target> migration
+
+## Preconditions
+Trusted reference output exists and its provenance is known; the parity
+suite runs and is red for the expected reason. If either is untrue, stop
+and report — do not begin translating.
+
+## Procedure
+1. Inventory the units and order them by dependency.
+2. Take the next unit. Translate its interface, then its implementation.
+3. Build the whole tree at the project's warning level.
+4. Run the parity suite. Apply the per-unit checklist.
+5. Report the unit, its deferred obligations, and the suite state. Then
+   the next unit.
+
+## Gates
+<the never-list, verbatim, with no escape hatches — the eight above,
+plus the ones specific to your languages>
+
+## Stage gates
+<per unit / dependency closure / completion, as above>
+
+## Reporting format
+What was translated, what is deferred and why, which cases are red.
+---
+```
+
+Beside it, in the same folder: `reference/idiom-map.md` with the mapping
+table for your language pair, and `checklists/per-unit.md` with the
+definition of done. `SKILL.md` holds the procedure; the detail lives next to
+it and is read when it is needed.
 
 ## The three things
 
