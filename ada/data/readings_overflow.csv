@@ -1,0 +1,3 @@
+# sensor 7 is calibrated with a +1.5 offset, so this raw value leaves
+# Celsius'Range once calibrated
+7,3600,150.0,G
