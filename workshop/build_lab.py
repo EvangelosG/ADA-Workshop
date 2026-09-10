@@ -8,6 +8,8 @@ a file:// URL on a laptop with no network.
     standalone.md  the backup page for rooms that cannot clone or run our
                    code, rendered with no JavaScript at all: a page that
                    executes our script is our code running on their laptop
+    talk-30min/src/handout.md
+                   the takeaway for the 30-minute talk, also script-free
 
     pip install markdown
     python3 workshop/build_lab.py
@@ -27,10 +29,13 @@ ROOT = Path(__file__).resolve().parent
 SOURCE = ROOT / "src" / "lab.md"
 OUTPUT = ROOT / "lab.html"
 
+TALK = ROOT / "talk-30min"
+
 # (markdown source, generated page, may run JavaScript)
 PAGES = [
     (SOURCE, OUTPUT, True),
     (ROOT / "src" / "standalone.md", ROOT / "standalone.html", False),
+    (TALK / "src" / "handout.md", TALK / "handout.html", False),
 ]
 
 STYLE = """
@@ -208,11 +213,11 @@ FOOTER_REPO = """Generated from <code>workshop/src/{source_name}</code> by
 <code>workshop/build_lab.py</code> — edit the markdown, not this file.
 Repo: <a href="https://github.com/EvangelosG/ADA-Workshop">github.com/EvangelosG/ADA-Workshop</a>"""
 
-# No repo link and no script: this page is handed to rooms that may not fetch
-# or execute anything of ours.
-FOOTER_PLAIN = """Ada&rarr;C++ migration skill workshop — standalone edition.
+# No repo link and no script: these pages are handed to rooms that may not
+# fetch or execute anything of ours.
+FOOTER_PLAIN = """Ada&rarr;C++ migration skill workshop.
 This page contains no scripts and makes no network requests; select and copy
-the prompt blocks by hand."""
+any prompt blocks by hand."""
 
 PROMPT_BLOCK = re.compile(
     r'<pre><code class="language-prompt">(.*?)</code></pre>', re.DOTALL

@@ -35,6 +35,21 @@ def standalone(standalone_source: str) -> str:
     return build_lab.render(standalone_source, "standalone.md", interactive=False)
 
 
+@pytest.fixture(scope="module")
+def handout_source() -> str:
+    return (build_lab.TALK / "src" / "handout.md").read_text(encoding="utf-8")
+
+
+@pytest.fixture(scope="module")
+def handout(handout_source: str) -> str:
+    return build_lab.render(handout_source, "handout.md", interactive=False)
+
+
+@pytest.fixture(scope="module")
+def talk_slides() -> str:
+    return (build_lab.TALK / "slides.md").read_text(encoding="utf-8")
+
+
 def test_committed_page_is_up_to_date() -> None:
     result = subprocess.run(
         [sys.executable, "workshop/build_lab.py", "--check"],
@@ -217,12 +232,20 @@ GATE_SENTINELS = {
 
 
 @pytest.mark.parametrize("name,pattern", sorted(GATE_SENTINELS.items()))
-@pytest.mark.parametrize("document", ["lab.md", "standalone.md"])
-def test_both_editions_teach_the_same_gates(
-    document: str, name: str, pattern: str
+@pytest.mark.parametrize(
+    "document",
+    [
+        build_lab.ROOT / "src" / "lab.md",
+        build_lab.ROOT / "src" / "standalone.md",
+        build_lab.TALK / "src" / "handout.md",
+    ],
+    ids=lambda path: path.name,
+)
+def test_every_edition_teaches_the_same_gates(
+    document: Path, name: str, pattern: str
 ) -> None:
-    text = (build_lab.ROOT / "src" / document).read_text(encoding="utf-8")
-    assert re.search(pattern, text), f"{document} is missing: {name}"
+    text = document.read_text(encoding="utf-8")
+    assert re.search(pattern, text), f"{document.name} is missing: {name}"
 
 
 @pytest.mark.parametrize("name,pattern", sorted(GATE_SENTINELS.items()))
@@ -269,6 +292,52 @@ def test_answer_key_agrees_with_the_lab() -> None:
     assert "tool-level guardrail" in text
     # the gate must permit the debugging that turns the suite green
     assert "Debugging the failure is not" in text
+
+
+def test_handout_runs_none_of_our_code(handout: str) -> None:
+    """Same audience as the standalone page: a static takeaway, no scripts."""
+    assert "<script" not in handout
+    assert "<button" not in handout
+    assert "<link" not in handout
+    assert "github.com" not in handout
+    assert "<style>" in handout
+
+
+def test_handout_carries_the_reference_material(handout: str) -> None:
+    """There is no repo to read it from, and no lab in which to derive it."""
+    assert "idiom map" in handout.lower()
+    assert "delta 0.1 digits 6" in handout
+    assert "per-package definition of done" in handout.lower()
+    assert "/ada-to-cpp-migration" in handout
+    assert "@ada-to-cpp-migration" not in handout
+    assert "permissions:" in handout
+    assert "tool-level guardrail" in handout
+
+
+def test_talk_deck_covers_the_gates_it_cannot_demonstrate(talk_slides: str) -> None:
+    """Without a lab the room never runs a probe, so the deck has to carry
+    every lesson the lab would otherwise produce by failing in public.
+    """
+    for claim in (
+        "weaken, skip or delete a parity test",
+        "at build or run time",
+        "shell out to the legacy program",
+        "run-time constraint check",
+        "only work allowed",
+        "fails or was skipped",
+        "permissions:",
+        "Constraint_Error",
+    ):
+        assert claim in talk_slides, claim
+
+
+def test_talk_deck_and_handout_agree_on_the_platform(
+    talk_slides: str, handout_source: str
+) -> None:
+    for text in (talk_slides, handout_source):
+        assert "@ada-to-cpp-migration" not in text
+        assert ".agents/skills/" in text
+        assert "%APPDATA%\\devin\\skills" in text
 
 
 def test_no_stale_references_to_retired_files() -> None:

@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Skills that can be trusted with a migration</title>
+<style>
+:root {
+  --bg: #10131a;
+  --panel: #171b24;
+  --border: #262c38;
+  --text: #dfe4ec;
+  --muted: #99a2b3;
+  --accent: #7aa2f7;
+  --warn: #f0b866;
+  --code-bg: #0c0f15;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 16px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+main { max-width: 52rem; margin: 0 auto; padding: 3rem 1.5rem 6rem; }
+h1 { font-size: 2.1rem; line-height: 1.2; margin: 0 0 1rem; }
+h2 {
+  font-size: 1.5rem;
+  margin: 3.5rem 0 1rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+}
+h3 { font-size: 1.2rem; margin: 2.5rem 0 .75rem; color: var(--accent); }
+a { color: var(--accent); }
+hr { display: none; }
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.25rem 0;
+  font-size: .93rem;
+}
+th, td {
+  border: 1px solid var(--border);
+  padding: .5rem .7rem;
+  text-align: left;
+  vertical-align: top;
+}
+th { background: var(--panel); }
+code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: .88em;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: .08em .35em;
+}
+pre {
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem 1.1rem;
+  overflow-x: auto;
+}
+pre code { background: none; border: 0; padding: 0; font-size: .86rem; }
+blockquote {
+  margin: 1.5rem 0;
+  padding: .9rem 1.1rem;
+  background: rgba(240, 184, 102, .08);
+  border-left: 3px solid var(--warn);
+  border-radius: 0 6px 6px 0;
+}
+blockquote p { margin: .3rem 0; }
+details {
+  margin: 1.5rem 0;
+  padding: .9rem 1.1rem;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+summary { cursor: pointer; font-weight: 600; color: var(--warn); }
+.prompt {
+  position: relative;
+  margin: 1.25rem 0;
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  background: var(--code-bg);
+}
+.prompt-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: .45rem .8rem;
+  border-bottom: 1px solid var(--border);
+  font-size: .74rem;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.prompt pre { border: 0; background: none; margin: 0; }
+.prompt pre code { white-space: pre-wrap; }
+button.copy {
+  font: inherit;
+  font-size: .78rem;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--text);
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: .2rem .7rem;
+  cursor: pointer;
+}
+button.copy:hover { border-color: var(--accent); }
+button.copy.done { color: #7fd88f; border-color: #7fd88f; }
+footer {
+  margin-top: 4rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+  font-size: .85rem;
+}
+@media print {
+  body { background: #fff; color: #000; }
+  .prompt, pre, details, table, th { border-color: #bbb; background: #f6f6f6; }
+  button.copy { display: none; }
+  details[open], details { background: #f6f6f6; }
+}
+</style>
+</head>
+<body>
+<main>
+<h1 id="skills-that-can-be-trusted-with-a-migration">Skills that can be trusted with a migration</h1>
+<p>The takeaway page for the 30-minute talk. It repeats the deck's argument in
+enough detail to be useful a week later, and carries the reference material
+— the idiom map and the per-package checklist — inline, so it works on its
+own with nothing to clone and nothing to install.</p>
+<p>There is a hands-on version of this material. This page is not it: nothing
+here asks you to run our code. Everything below applies to an Ada codebase
+you already have and are already allowed to build.</p>
+<h2 id="what-a-skill-is">What a skill is</h2>
+<p>A skill is a folder with a <code>SKILL.md</code> in it, plus whatever supporting files
+the procedure needs — checklists, mapping tables, templates. The frontmatter
+gives it a name and a description:</p>
+<pre><code class="language-markdown">---
+name: ada-to-cpp-migration
+description: Migrate Ada (.ads/.adb) to C++17 with parity proven against
+  captured reference output. Use for any port/translate/rewrite request.
+---
+</code></pre>
+<p>It is discovered automatically and fires when a request looks relevant to
+its description; you can also invoke it by hand as <code>/ada-to-cpp-migration</code>.
+Devin Local is the agent in Devin Desktop as of 3.9.19, when Cascade was
+removed — so slash, not at-sign.</p>
+<h3 id="desktop-and-the-cli-use-the-same-skill">Desktop and the CLI use the same skill</h3>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Location</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Project skill</td>
+<td><code>.agents/skills/&lt;name&gt;/</code> — committed with the repo</td>
+</tr>
+<tr>
+<td>Global skill</td>
+<td><code>~/.config/devin/skills/&lt;name&gt;/</code> (macOS, Linux), <code>%APPDATA%\devin\skills\&lt;name&gt;\</code> (Windows)</td>
+</tr>
+</tbody>
+</table>
+<p>Same folder layout, same frontmatter, same invocation, whether you are in
+the desktop app or the terminal.</p>
+<p>Author it <strong>in the repo</strong>. A global skill helps you; a project skill is
+reviewed like code, versioned with the code it describes, and shows up for
+the next engineer who clones. The alternative locations <code>.devin/skills/</code> and
+<code>.windsurf/skills/</code> are also recognised for a project.</p>
+<h3 id="progressive-disclosure-and-why-the-description-decides-everything">Progressive disclosure, and why the description decides everything</h3>
+<p>Until a skill fires, the model sees only its <code>name</code> and <code>description</code>. The
+supporting files are read when the procedure needs them.</p>
+<p>Three consequences:</p>
+<ol>
+<li>The description is not a summary, it is a <strong>trigger</strong>. Write it as <em>when
+   to invoke me</em>, using the words a real request will use — port, translate,
+   rewrite, migrate, <code>.ads</code>, <code>.adb</code>.</li>
+<li><code>SKILL.md</code> can be long and its resources longer, at no cost until they
+   are needed. Keep procedure in the skill and domain detail beside it.</li>
+<li>A skill nobody triggers is a file nobody reads. The most common defect in
+   a hand-written skill is not a bad procedure — it is a description that
+   never matches how anyone asks.</li>
+</ol>
+<p>If a skill fails to fire on a realistic request, the description is the
+first thing to inspect: invocation is a relevance judgement, not a string
+match, so a miss is evidence rather than proof.</p>
+<h3 id="skill-or-rule">Skill or rule?</h3>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Loaded</th>
+<th>Use for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Rule (<code>AGENTS.md</code>)</td>
+<td>always</td>
+<td>short, universal constraints</td>
+</tr>
+<tr>
+<td>Skill</td>
+<td>on demand, when relevant</td>
+<td>procedures with judgement and resources</td>
+</tr>
+</tbody>
+</table>
+<p>A migration method is a skill: long, conditional, resource-carrying, and it
+needs to fire even when the engineer has forgotten it exists.</p>
+<h2 id="compilation-is-not-migration">Compilation is not migration</h2>
+<p>The question a migration has to answer is not "does it build" but "does it
+still do the same thing". So the first artifact is not C++ — it is evidence.</p>
+<p>Before writing any target code, run the legacy program and capture, for each
+case:</p>
+<pre><code>stdout        stderr        exit status
+</code></pre>
+<p>Then have the test harness run the migrated binary on the same input and
+compare all three, byte for byte. That is the definition of done: not a code
+review, not a diff of the sources.</p>
+<p>Be precise about what this buys you. A handful of cases is strong
+<strong>characterization evidence</strong> for the behaviour those cases cover. It is not
+proof that the two programs are equivalent, and an engineer in the room will
+say so if you overclaim it. Pick cases by failure mode rather than by count:</p>
+<ul>
+<li>a normal case;</li>
+<li>a malformed input;</li>
+<li>a boundary or no-arguments case;</li>
+<li>and at least one that fails <strong>after</strong> validation — a constraint check on a
+  computed value, or a missing file. Those are the cases a plausible-looking
+  migration passes the others without handling.</li>
+</ul>
+<h2 id="the-gates">The gates</h2>
+<p>Write prohibitions, not preferences. An instruction competes with everything
+else in the context window; a prohibition is checkable, by the model and by
+you in review.</p>
+<ul>
+<li>never edit the captured reference output</li>
+<li>never edit the legacy sources</li>
+<li>never weaken, skip or delete a parity test</li>
+<li>never add a tolerance to a comparison that was exact</li>
+<li>never translate a fixed point or integer type to floating point</li>
+<li>never drop a run-time constraint check — an Ada subtype constraint that
+  raises <code>Constraint_Error</code> needs an explicit counterpart with the same
+  observable behaviour, everywhere a value of that type is produced:
+  arithmetic results and conversions, not only parsed input</li>
+<li>never hard-code fixtures, fixture filenames or expected output into the
+  program, and never read from or generate code from the captured output at
+  build or run time</li>
+<li>never wrap, link to or shell out to the legacy program to pass a case</li>
+<li>never report the migration complete while any parity case fails or was
+  skipped</li>
+<li>if something cannot be translated faithfully — stop and report</li>
+</ul>
+<p>If you cannot phrase a rule as <em>never</em> or <em>stop and report</em>, it is guidance.
+Guidance belongs in a reference file, where it does not dilute the gates.</p>
+<h3 id="the-gate-that-deadlocks">The gate that deadlocks</h3>
+<p>"Never advance while any parity case fails" reads like rigour and is a bug.
+An end-to-end suite stays red until the last package lands, so a
+literal-minded agent refuses to start the second package.</p>
+<p>Scope the gate by stage instead of softening it:</p>
+<table>
+<thead>
+<tr>
+<th>Stage</th>
+<th>What must hold before continuing</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>after each package</td>
+<td>the tree builds clean at the project's warning level, the per-package checklist passes, and no case that was passing has started failing</td>
+</tr>
+<tr>
+<td>once the executable's dependency closure is translated</td>
+<td>the whole suite passes; while any case is red, fixing it is the only permitted work — no new package, no cleanup, no refactoring. Debugging the failure is not "further work", it is the work</td>
+</tr>
+<tr>
+<td>completion</td>
+<td>never describe the migration as done while any parity case fails or was skipped</td>
+</tr>
+</tbody>
+</table>
+<p>You find defects like this by <strong>running</strong> the skill, not by reading it.
+Assume every gate list you write has one in it.</p>
+<h3 id="three-ways-to-a-green-suite-with-nothing-migrated">Three ways to a green suite with nothing migrated</h3>
+<p>The agent can read the inputs and the expected output, so the cheapest route
+to green is not to migrate at all:</p>
+<ol>
+<li><strong>Special-case the fixture.</strong> Branch on the filename, print the expected
+   answer. Passing tests, zero migration.</li>
+<li><strong>Copy the evidence.</strong> <code>std::ifstream in("golden/report.stdout");</code>
+   <code>std::cout &lt;&lt; in.rdbuf();</code> — this hard-codes nothing, so a rule that only
+   forbids hard-coded output misses it entirely. Forbid build time too, or a
+   generated header is the next move.</li>
+<li><strong>Delegate.</strong> An implementation that is really just
+   shelling out to the Ada program, or linking against it: every case
+   green, nothing translated, and the artifact still depends on the
+   toolchain you were trying to retire.</li>
+</ol>
+<p>Each of these needed its own prohibition. The general form of the rule is
+<em>never make the program aware that it is under test, and never let the
+legacy implementation produce the answer.</em></p>
+<h3 id="prose-gates-and-enforced-gates">Prose gates and enforced gates</h3>
+<p>Everything above holds because the model agrees with it. Some of it can be
+enforced instead:</p>
+<pre><code class="language-yaml">permissions:
+  deny:  [Write(golden/**), Write(ada/**)]
+  ask:   [Write(cpp/tests/**)]
+</code></pre>
+<p><code>deny</code> holds whether or not the model agrees. Tests are <code>ask</code> rather than
+<code>deny</code> because adding a parity case is legitimate work and weakening one is
+not, and no path pattern can tell those apart — so a human decides.</p>
+<p>Two honest limits. This is a <strong>tool-level guardrail</strong>, not OS isolation: it
+governs the agent's file writes, not arbitrary side effects. And the most
+important rule in the list — do not map fixed point to <code>double</code> — cannot be
+expressed as a permission at all, because it is a judgement about meaning.</p>
+<blockquote>
+<p>Enforce what the platform can enforce. Reserve prose for judgement.</p>
+</blockquote>
+<h2 id="the-defect-our-own-suite-missed">The defect our own suite missed</h2>
+<p>The worked example declares:</p>
+<pre><code class="language-ada">type Celsius is delta 0.1 digits 6 range -80.0 .. 150.0;
+</code></pre>
+<p>Our finished C++ checked that range on parsed input only. A reading of 150.0
+from a sensor with a +1.5 calibration offset therefore became 151.5 and
+printed a clean report, where the Ada program raises <code>Constraint_Error</code> and
+exits 2. All three parity cases passed. The answer key was breaking the
+skill's own "never drop a run-time constraint check" rule, and the evidence
+was too thin to notice.</p>
+<p>The fix was two more cases: one where the constraint fails on a <em>computed</em>
+value, and one where a missing input file fails before any parsing, raising
+an exception that is not the program's own.</p>
+<p>What the story is about:</p>
+<ul>
+<li>The gate was right. The evidence was too weak to catch its violation.</li>
+<li>Coverage gaps do not look like gaps from the inside. They look green.</li>
+<li>A rule that no test case can falsify is a rule you are trusting on faith.</li>
+</ul>
+<h2 id="ada-c-idiom-map">Ada → C++ idiom map</h2>
+<p>The traps are the entries that compile cleanly and give wrong answers.</p>
+<table>
+<thead>
+<tr>
+<th>Ada</th>
+<th>C++</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>package P</code>, child <code>P.C</code></td>
+<td><code>namespace p</code>, <code>p::c</code></td>
+<td>one header per spec, one source per body</td>
+</tr>
+<tr>
+<td><code>private</code> part of a spec</td>
+<td>private members / pimpl</td>
+<td>nothing body-private in the header</td>
+</tr>
+<tr>
+<td>abstract tagged type</td>
+<td>abstract class, <code>virtual</code> + <code>override</code></td>
+<td>dispatching is not automatic</td>
+</tr>
+<tr>
+<td><code>access T'Class</code></td>
+<td><code>T*</code> or <code>std::unique_ptr&lt;T&gt;</code></td>
+<td>decide ownership explicitly</td>
+</tr>
+<tr>
+<td>discriminated record, variant part</td>
+<td><code>std::variant</code> of payload structs</td>
+<td>or a tagged struct if the discriminant is read</td>
+</tr>
+<tr>
+<td>generic package / subprogram</td>
+<td>template</td>
+<td>instantiate explicitly if you want the errors early</td>
+</tr>
+<tr>
+<td><code>type T is range 1 .. 99</code></td>
+<td><code>int</code> plus an explicit check</td>
+<td><strong>trap</strong>: check wherever a value is produced, not only on input</td>
+</tr>
+<tr>
+<td><code>subtype S is T range A .. B</code></td>
+<td>same</td>
+<td>the check does not come for free</td>
+</tr>
+<tr>
+<td><code>delta 0.1 digits 6</code></td>
+<td>scaled integer (<code>int</code> tenths)</td>
+<td><strong>trap</strong>: exact decimal, <em>not</em> <code>double</code></td>
+</tr>
+<tr>
+<td><code>array (Positive range &lt;&gt;)</code></td>
+<td><code>std::vector</code></td>
+<td><strong>trap</strong>: Ada arrays are commonly 1-based</td>
+</tr>
+<tr>
+<td><code>String (1 .. N)</code></td>
+<td><code>std::string</code></td>
+<td><strong>trap</strong>: fixed-length, blank-padded, and the padding is visible</td>
+</tr>
+<tr>
+<td><code>raise E with "msg"</code></td>
+<td><code>throw</code></td>
+<td><strong>trap</strong>: the message text is observable output</td>
+</tr>
+<tr>
+<td><code>Integer'Image</code></td>
+<td>manual formatting</td>
+<td><strong>trap</strong>: leading blank for non-negatives</td>
+</tr>
+<tr>
+<td><code>Ada.Text_IO.Put_Line</code></td>
+<td><code>std::cout &lt;&lt; … &lt;&lt; '\n'</code></td>
+<td>keep stdout and stderr on the same streams</td>
+</tr>
+<tr>
+<td><code>mod</code> vs <code>rem</code></td>
+<td><code>%</code> matches <code>rem</code></td>
+<td><strong>trap</strong>: <code>mod</code> differs for negative operands</td>
+</tr>
+<tr>
+<td>unhandled exception at top level</td>
+<td>catch, print, exit</td>
+<td>match both the text and the exit status</td>
+</tr>
+<tr>
+<td>task / protected object</td>
+<td><code>std::thread</code> / <code>std::mutex</code></td>
+<td>needs a deterministic harness before any of this is testable</td>
+</tr>
+</tbody>
+</table>
+<h2 id="per-package-definition-of-done">Per-package definition of done</h2>
+<ul>
+<li>[ ] every entity exported by the spec exists in the header; nothing
+      private to the body leaked into it</li>
+<li>[ ] every exception the package can raise is declared and reachable, with
+      the same message text</li>
+<li>[ ] every subtype constraint enforced in this package has an explicit
+      check with the same observable effect, applied to computed values as
+      well as inputs</li>
+<li>[ ] constraints that only a not-yet-translated package enforces are
+      written down as deferred obligations and closed before the
+      dependency-closure gate</li>
+<li>[ ] new sources are in the build; it compiles at the project's warning
+      level with no new warnings</li>
+<li>[ ] no parity case that was passing before this package now fails</li>
+<li>[ ] no reference output, legacy source or test was modified</li>
+<li>[ ] no fixture name, expected output or test-specific branch appears in
+      the migrated sources; nothing reads or generates from the captured
+      output at build or run time; nothing invokes, links to or wraps the
+      legacy program</li>
+</ul>
+<h2 id="monday-morning">Monday morning</h2>
+<ol>
+<li>Pick <strong>one runnable slice</strong> — not the system. Verify its build and run
+   commands today, not from memory.</li>
+<li>Capture stdout, stderr and exit status for four or five cases chosen by
+   failure mode. If the program is not deterministic — timestamps, hash
+   ordering, concurrency — making it deterministic is task one, and it is
+   worth doing even if the migration never happens.</li>
+<li>Write <code>SKILL.md</code>: a description written as a trigger, a numbered loop
+   that does one package at a time, the gate list, and a reporting format.
+   Put the idiom map and the checklist in files beside it.</li>
+<li>Attack it in a fresh conversation. Ask it to relax a type "for now", to
+   edit the captured output to match, to special-case a fixture because you
+   are short on time. <strong>A refusal is the passing result.</strong> A gate that folds
+   under mild pressure is decoration — rewrite it as an absolute and probe
+   again.</li>
+<li>Add <code>permissions</code> for what the platform can enforce, and commit the
+   folder so the method ships with the code.</li>
+</ol>
+<h2 id="the-three-things">The three things</h2>
+<ol>
+<li>The <strong>description</strong> decides whether the skill exists in practice.</li>
+<li>The <strong>gates</strong> decide whether its output can be trusted — enforce the ones
+   the platform can enforce, and assume the list is one loophole short.</li>
+<li>The <strong>evidence</strong> decides whether the migration is real, and how good the
+   evidence is decides what the gates are worth.</li>
+</ol>
+<footer>
+Ada&rarr;C++ migration skill workshop.
+This page contains no scripts and makes no network requests; select and copy
+any prompt blocks by hand.
+</footer>
+</main>
+</body>
+</html>

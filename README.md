@@ -10,7 +10,7 @@ The migration is the example. The skill is the deliverable.
 1. Open `workshop/lab.html` in a browser — the whole lab on one page:
    setup, concepts, and every prompt with a copy button. Works offline
    straight from your clone.
-2. Verify your environment (this **must** show 3 failing tests):
+2. Verify your environment (this **must** show 5 failing tests):
 
 ```bash
 cmake -S cpp -B cpp/build
@@ -38,6 +38,17 @@ Rebuild the deck after editing the source:
 npx @marp-team/marp-cli@latest --pdf workshop/slides.md -o workshop/slides.pdf
 ```
 
+`workshop/talk-30min/` is the **30-minute presentation** edition — the same
+method with no lab, for a slot too short to author a skill in: `slides.pdf`
+(source `slides.md`), `talk-track.md`, and `handout.html` as the takeaway,
+which carries the idiom map and checklist inline. Script-free, like the
+standalone page, so it can go to the same rooms.
+
+```bash
+npx @marp-team/marp-cli@latest --pdf workshop/talk-30min/slides.md \
+  -o workshop/talk-30min/slides.pdf
+```
+
 `workshop/standalone.html` is the backup edition, for a room that may not
 clone this repository or run code from it (a common government-client
 constraint). It needs nothing of ours: attendees work against their own Ada
@@ -45,8 +56,7 @@ codebase, the instructor demonstrates on this one, and the idiom map and
 checklist are reproduced in the page itself. Same seven steps, same gates.
 Hand it out as a single file.
 
-Both pages are generated — edit the sources under `workshop/src/`, never the
-HTML:
+Every page is generated — edit the markdown sources, never the HTML:
 
 ```bash
 pip install markdown
@@ -64,6 +74,7 @@ pytest workshop/test_build_lab.py
 | `cpp/` | Where the migration goes: a stub `main.cpp` plus the parity harness. |
 | `workshop/lab.html` | The attendee page (generated from `workshop/src/lab.md`). |
 | `workshop/standalone.html` | Backup edition for rooms that cannot use this repo (from `workshop/src/standalone.md`). |
+| `workshop/talk-30min/` | The 30-minute presentation edition: deck, notes and a static handout. |
 | `workshop/` | Slides, talk track, and the attendee page generator. |
 
 ## The answer key
