@@ -159,15 +159,15 @@ check-golden</code> re-runs the reference program and <em>compares</em> its outp
 <code>golden/</code> without touching either — that is the verification a migration is
 allowed to do; rewriting the goldens is not.</p>
 <h3 id="verify-your-setup">Verify your setup</h3>
-<p>Run this. It <strong>must fail</strong>, with three failing parity tests:</p>
+<p>Run this. It <strong>must fail</strong>, with five failing parity tests:</p>
 <pre><code class="language-shell">cmake -S cpp -B cpp/build
 cmake --build cpp/build
 ctest --test-dir cpp/build --output-on-failure
 </code></pre>
 <p>Expected:</p>
-<pre><code class="language-text">0% tests passed, 3 tests failed out of 3
+<pre><code class="language-text">0% tests passed, 5 tests failed out of 5
 </code></pre>
-<p>Three red tests means the harness works and the migration has not been done
+<p>Five red tests means the harness works and the migration has not been done
 yet. That is the correct starting state. Green tests, or an error before the
 tests run, means something is wrong with your toolchain — fix it now.</p>
 <hr />
@@ -214,10 +214,17 @@ generics, constrained subtypes, and exception messages that are printed.</p>
 <p>The important idea: <strong><code>golden/</code> is the specification, not the Ada source.</strong>
 A migration that compiles is not a migration. A migration whose stdout,
 stderr and exit status match the reference byte for byte is.</p>
-<p>Be precise about what that buys you: three cases are strong <em>characterization
+<p>Be precise about what that buys you: five cases are strong <em>characterization
 evidence</em> for the behaviour they cover, not proof that the two programs are
 equivalent. The discipline is what transfers — when you do this on a real
 codebase, the number of cases is a decision you make deliberately.</p>
+<p>Two of the five exist because three were not enough. <code>calibration_overflow</code>
+feeds a reading that is in range until the sensor offset is applied, so the
+subtype check that fails is on a <em>computed</em> value; <code>missing_file</code> fails
+before any parsing happens, with an Ada exception that is not the program's
+own. Both are cases an implementation can pass the other three without
+handling — which is exactly how a coverage gap looks before someone finds
+it.</p>
 <hr />
 <h2 id="2-skills-in-devin-local-the-90-seconds-you-need">2. Skills in Devin Local — the 90 seconds you need</h2>
 <ul>

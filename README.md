@@ -107,5 +107,5 @@ From a checkout of the `solution` branch:
 ```bash
 cmake -S solution/cpp -B solution/cpp/build
 cmake --build solution/cpp/build
-ctest --test-dir solution/cpp/build --output-on-failure   # 3/3 pass
+ctest --test-dir solution/cpp/build --output-on-failure   # 5/5 pass
 ```

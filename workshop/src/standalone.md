@@ -30,7 +30,10 @@ already have and are already allowed to build.
   not the whole system;
 - its **build command** and its **run command**, verified working that week;
 - **three representative inputs**: a normal case, a malformed one, and a
-  boundary or no-arguments case.
+  boundary or no-arguments case. If you can find a fourth that fails *after*
+  validation — a subtype check on a computed value, a missing file — take
+  it; those are the cases a plausible-looking migration passes the others
+  without handling.
 
 Without that, the first custom Make hierarchy or unclear entry point eats ten
 minutes of instructor time while everyone else waits. Choosing the target is

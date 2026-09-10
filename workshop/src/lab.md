@@ -40,7 +40,7 @@ allowed to do; rewriting the goldens is not.
 
 ### Verify your setup
 
-Run this. It **must fail**, with three failing parity tests:
+Run this. It **must fail**, with five failing parity tests:
 
 ```shell
 cmake -S cpp -B cpp/build
@@ -51,10 +51,10 @@ ctest --test-dir cpp/build --output-on-failure
 Expected:
 
 ```text
-0% tests passed, 3 tests failed out of 3
+0% tests passed, 5 tests failed out of 5
 ```
 
-Three red tests means the harness works and the migration has not been done
+Five red tests means the harness works and the migration has not been done
 yet. That is the correct starting state. Green tests, or an error before the
 tests run, means something is wrong with your toolchain — fix it now.
 
@@ -85,10 +85,18 @@ The important idea: **`golden/` is the specification, not the Ada source.**
 A migration that compiles is not a migration. A migration whose stdout,
 stderr and exit status match the reference byte for byte is.
 
-Be precise about what that buys you: three cases are strong *characterization
+Be precise about what that buys you: five cases are strong *characterization
 evidence* for the behaviour they cover, not proof that the two programs are
 equivalent. The discipline is what transfers — when you do this on a real
 codebase, the number of cases is a decision you make deliberately.
+
+Two of the five exist because three were not enough. `calibration_overflow`
+feeds a reading that is in range until the sensor offset is applied, so the
+subtype check that fails is on a *computed* value; `missing_file` fails
+before any parsing happens, with an Ada exception that is not the program's
+own. Both are cases an implementation can pass the other three without
+handling — which is exactly how a coverage gap looks before someone finds
+it.
 
 ---
 

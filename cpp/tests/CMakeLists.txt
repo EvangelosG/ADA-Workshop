@@ -13,4 +13,6 @@ endfunction()
 
 add_parity_test(report "${DATA_DIR}/readings.csv")
 add_parity_test(bad_input "${DATA_DIR}/readings_bad.csv")
+add_parity_test(calibration_overflow "${DATA_DIR}/readings_overflow.csv")
+add_parity_test(missing_file "${DATA_DIR}/no_such_file.csv")
 add_parity_test(no_args "")

@@ -145,7 +145,7 @@ cmake -S cpp -B cpp/build && cmake --build cpp/build
 ctest --test-dir cpp/build --output-on-failure
 ```
 
-Expected: **3 tests, 3 failures.**
+Expected: **5 tests, 5 failures.**
 
 Red for the right reason = the harness is trustworthy.
 Green at the start = you are testing nothing.

@@ -158,7 +158,10 @@ migration today you did it by hand and learned nothing that scales.</p>
   not the whole system;</li>
 <li>its <strong>build command</strong> and its <strong>run command</strong>, verified working that week;</li>
 <li><strong>three representative inputs</strong>: a normal case, a malformed one, and a
-  boundary or no-arguments case.</li>
+  boundary or no-arguments case. If you can find a fourth that fails <em>after</em>
+  validation — a subtype check on a computed value, a missing file — take
+  it; those are the cases a plausible-looking migration passes the others
+  without handling.</li>
 </ul>
 <p>Without that, the first custom Make hierarchy or unclear entry point eats ten
 minutes of instructor time while everyone else waits. Choosing the target is

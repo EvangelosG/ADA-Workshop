@@ -4,7 +4,12 @@ BUILD ?= $(CURDIR)/../.ref-build
 BIN   := $(BUILD)/telemetry_main
 
 GOLDEN := $(CURDIR)/../golden
-CASES  := report:data/readings.csv bad_input:data/readings_bad.csv no_args:
+# calibration_overflow and missing_file cover failures that happen *after*
+# input validation: a subtype check on a computed value, and an Ada run-time
+# exception that is not Invalid_Reading. Both are observable on stderr.
+CASES  := report:data/readings.csv bad_input:data/readings_bad.csv \
+          calibration_overflow:data/readings_overflow.csv \
+          missing_file:data/no_such_file.csv no_args:
 
 .PHONY: all run check-golden golden clean
 

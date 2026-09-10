@@ -141,7 +141,7 @@ Then the honest bit:
 Slow down for thirty seconds. This is the technical heart.
 
 > "Before a line of C++ existed, we ran the Ada program and captured stdout,
-> stderr and the exit status for three cases. Those files are the spec."
+> stderr and the exit status for five cases. Those files are the spec."
 
 > "Notice what is being compared: all three streams, byte for byte. Not 'the
 > output looks right'. Not a test the agent wrote for itself — a test whose
@@ -155,7 +155,7 @@ The line to repeat:
 
 Then the caveat, in one breath, before an engineer supplies it for you:
 
-> "Evidence for the behaviour these three cases cover. Characterization, not
+> "Evidence for the behaviour these five cases cover. Characterization, not
 > proof of equivalence. On a real migration, how many cases you capture is a
 > decision you make on purpose."
 
@@ -229,7 +229,7 @@ would be true of any project. What remains is the skill.
 Take **two** answers and supply the rest yourself — with thirty people this
 becomes a five-minute discussion if you let it. You will reliably get "change
 the expected output" and "delete the test". Then ask the sharper question
-yourself: "how would *you* make three tests pass in one minute without doing
+yourself: "how would *you* make the suite pass in one minute without doing
 the migration?" That gets you to hard-coding the fixture, and to its cousin:
 shelling out to the Ada binary.
 
@@ -258,7 +258,7 @@ Walk it as a sequence and let them answer step 3:
 
 1. the first package is translated
 2. the executable is still incomplete
-3. so what do the three end-to-end parity tests do? — *stay red*
+3. so what do the end-to-end parity tests do? — *stay red*
 4. therefore "never advance while anything is red" is unsatisfiable
 5. therefore gates must be scoped to lifecycle stage
 

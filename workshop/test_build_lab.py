@@ -97,7 +97,7 @@ def test_lab_covers_every_prompt(page: str) -> None:
 
 
 def test_starting_state_is_documented_as_failing(page: str) -> None:
-    assert "3 tests failed out of 3" in page
+    assert "5 tests failed out of 5" in page
 
 
 def test_lab_targets_devin_local_not_cascade(page: str) -> None:
