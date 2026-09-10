@@ -151,7 +151,7 @@ Green at the start = you are testing nothing.
 | Probe | try to talk it out of its own gates | 8 min |
 | Generalise | make it portable, name what got weaker | 5 min |
 
-`workshop/prompts.md` — paste them verbatim.
+Open `workshop/lab.html` — every prompt has a copy button.
 
 ---
 

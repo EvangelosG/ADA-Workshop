@@ -7,9 +7,10 @@ The migration is the example. The skill is the deliverable.
 
 ## Attendees start here
 
-1. `workshop/lab-guide.md` — setup, what is in the repo, the lab steps
-2. `workshop/prompts.md` — the prompts to paste, in order
-3. Verify your environment (this **must** show 3 failing tests):
+1. Open `workshop/lab.html` in a browser — the whole lab on one page:
+   setup, concepts, and every prompt with a copy button. Works offline
+   straight from your clone.
+2. Verify your environment (this **must** show 3 failing tests):
 
 ```bash
 cmake -S cpp -B cpp/build
@@ -32,6 +33,16 @@ Rebuild the deck after editing the source:
 npx @marp-team/marp-cli@latest --pdf workshop/slides.md -o workshop/slides.pdf
 ```
 
+The attendee page is generated — edit `workshop/src/lab.md`, never
+`workshop/lab.html`:
+
+```bash
+pip install markdown
+python3 workshop/build_lab.py            # regenerate
+python3 workshop/build_lab.py --check    # fail if the page is stale
+pytest workshop/test_build_lab.py
+```
+
 ## Layout
 
 | Path | What it is |
@@ -41,7 +52,8 @@ npx @marp-team/marp-cli@latest --pdf workshop/slides.md -o workshop/slides.pdf
 | `cpp/` | Where the migration goes: a stub `main.cpp` plus the parity harness. |
 | `solution/cpp/` | A completed migration that passes every parity case. |
 | `solution/ada-to-cpp-migration/` | The finished skill. |
-| `workshop/` | Slides, talk track, lab guide, prompts. |
+| `workshop/lab.html` | The attendee page (generated from `workshop/src/lab.md`). |
+| `workshop/` | Slides, talk track, and the attendee page generator. |
 
 The finished skill lives under `solution/` rather than `.agents/skills/` on
 purpose: if it were in a skill directory, Devin Desktop would load it during

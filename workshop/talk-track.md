@@ -158,7 +158,8 @@ This is the last moment where a broken environment is cheap to fix.
 
 Set expectations for the next 40 minutes.
 
-> "Prompts are in `workshop/prompts.md`. Paste them verbatim the first time
+> "Open `workshop/lab.html` from your clone — the whole lab is on that one
+> page and every prompt has a copy button. Paste them verbatim the first time
 > through — each one is shaped deliberately, and the notes under them explain
 > the shape. I will call time at each step and demo my version, so you can
 > stay with the group even if yours diverges."

@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Build an Ada→C++ migration skill</title>
+<style>
+:root {
+  --bg: #10131a;
+  --panel: #171b24;
+  --border: #262c38;
+  --text: #dfe4ec;
+  --muted: #99a2b3;
+  --accent: #7aa2f7;
+  --warn: #f0b866;
+  --code-bg: #0c0f15;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 16px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+main { max-width: 52rem; margin: 0 auto; padding: 3rem 1.5rem 6rem; }
+h1 { font-size: 2.1rem; line-height: 1.2; margin: 0 0 1rem; }
+h2 {
+  font-size: 1.5rem;
+  margin: 3.5rem 0 1rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+}
+h3 { font-size: 1.2rem; margin: 2.5rem 0 .75rem; color: var(--accent); }
+a { color: var(--accent); }
+hr { display: none; }
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.25rem 0;
+  font-size: .93rem;
+}
+th, td {
+  border: 1px solid var(--border);
+  padding: .5rem .7rem;
+  text-align: left;
+  vertical-align: top;
+}
+th { background: var(--panel); }
+code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: .88em;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: .08em .35em;
+}
+pre {
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem 1.1rem;
+  overflow-x: auto;
+}
+pre code { background: none; border: 0; padding: 0; font-size: .86rem; }
+blockquote {
+  margin: 1.5rem 0;
+  padding: .9rem 1.1rem;
+  background: rgba(240, 184, 102, .08);
+  border-left: 3px solid var(--warn);
+  border-radius: 0 6px 6px 0;
+}
+blockquote p { margin: .3rem 0; }
+details {
+  margin: 1.5rem 0;
+  padding: .9rem 1.1rem;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+summary { cursor: pointer; font-weight: 600; color: var(--warn); }
+.prompt {
+  position: relative;
+  margin: 1.25rem 0;
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  background: var(--code-bg);
+}
+.prompt-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: .45rem .8rem;
+  border-bottom: 1px solid var(--border);
+  font-size: .74rem;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.prompt pre { border: 0; background: none; margin: 0; }
+.prompt pre code { white-space: pre-wrap; }
+button.copy {
+  font: inherit;
+  font-size: .78rem;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--text);
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: .2rem .7rem;
+  cursor: pointer;
+}
+button.copy:hover { border-color: var(--accent); }
+button.copy.done { color: #7fd88f; border-color: #7fd88f; }
+footer {
+  margin-top: 4rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+  font-size: .85rem;
+}
+@media print {
+  body { background: #fff; color: #000; }
+  .prompt, pre, details, table, th { border-color: #bbb; background: #f6f6f6; }
+  button.copy { display: none; }
+  details[open], details { background: #f6f6f6; }
+}
+</style>
+</head>
+<body>
+<main>
+<h1 id="build-an-adac-migration-skill">Build an Ada→C++ migration skill</h1>
+<p><strong>60 minutes. Devin Desktop. Some Ada familiarity assumed.</strong></p>
+<p>You are not here to finish a migration. You are here to build a <em>skill</em> — a
+reusable procedure that makes the agent migrate correctly when you are not
+watching — and to learn how to tell a good one from a plausible one.</p>
+<p>Everything below happens in this repository. You never touch your own code
+during the lab; the last exercise is about carrying the method home.</p>
+<p>Scroll and follow along. Prompt blocks have a copy button.</p>
+<hr />
+<h2 id="0-before-you-start">0. Before you start</h2>
+<p>Do this <strong>before</strong> the session starts, not during it.</p>
+<p>Required:</p>
+<ul>
+<li>Devin Desktop installed and signed in.</li>
+<li>A C++17 compiler and CMake 3.16+ (<code>cmake --version</code>).</li>
+<li>This repo cloned and opened as your workspace:</li>
+</ul>
+<pre><code class="language-shell">git clone https://github.com/EvangelosG/ADA-Workshop
+</code></pre>
+<p>Optional — you do <strong>not</strong> need Ada installed, the reference outputs are
+committed. But if you want to build and run the Ada program yourself: install
+GNAT (Ubuntu <code>sudo apt-get install gnat</code>; macOS/Windows via
+<a href="https://alire.ada.dev">Alire</a>), then <code>make -C ada run</code>.</p>
+<h3 id="verify-your-setup">Verify your setup</h3>
+<p>Run this. It <strong>must fail</strong>, with three failing parity tests:</p>
+<pre><code class="language-shell">cmake -S cpp -B cpp/build
+cmake --build cpp/build
+ctest --test-dir cpp/build --output-on-failure
+</code></pre>
+<p>Expected:</p>
+<pre><code class="language-text">0% tests passed, 3 tests failed out of 3
+</code></pre>
+<p>Three red tests means the harness works and the migration has not been done
+yet. That is the correct starting state. Green tests, or an error before the
+tests run, means something is wrong with your toolchain — fix it now.</p>
+<hr />
+<h2 id="1-what-is-in-the-repo">1. What is in the repo</h2>
+<table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What it is</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ada/src/</code></td>
+<td>The reference implementation: 5 packages, ~450 lines. Read-only during the lab.</td>
+</tr>
+<tr>
+<td><code>ada/data/</code></td>
+<td>Input files for the reference cases.</td>
+</tr>
+<tr>
+<td><code>golden/</code></td>
+<td>Captured stdout, stderr and exit status of the Ada program. <strong>The specification.</strong></td>
+</tr>
+<tr>
+<td><code>cpp/</code></td>
+<td>Where the migration goes. A stub <code>main.cpp</code> and the parity harness.</td>
+</tr>
+<tr>
+<td><code>cpp/tests/parity.cmake</code></td>
+<td>Runs the C++ binary and compares all three streams against <code>golden/</code>.</td>
+</tr>
+<tr>
+<td><code>solution/cpp/</code></td>
+<td>A completed migration that passes every parity case. Look after, not during.</td>
+</tr>
+<tr>
+<td><code>solution/ada-to-cpp-migration/</code></td>
+<td>The finished skill. Also look after — it is deliberately <em>not</em> in a skill directory, so Devin will not load it during the lab.</td>
+</tr>
+</tbody>
+</table>
+<p>The Ada program reads a CSV of sensor readings, calibrates them per sensor
+type, prints a summary, and evaluates alert rules. It was chosen because it
+covers the constructs that make Ada migrations go wrong: decimal fixed point,
+tagged types with dispatching, discriminated records with variant parts,
+generics, constrained subtypes, and exception messages that are printed.</p>
+<p>The important idea: <strong><code>golden/</code> is the specification, not the Ada source.</strong>
+A migration that compiles is not a migration. A migration whose stdout,
+stderr and exit status match the reference byte for byte is.</p>
+<hr />
+<h2 id="2-skills-in-devin-desktop-the-90-seconds-you-need">2. Skills in Devin Desktop — the 90 seconds you need</h2>
+<ul>
+<li>A skill is a folder with a <code>SKILL.md</code>. Workspace skills live in
+  <code>.windsurf/skills/&lt;name&gt;/</code> or <code>.agents/skills/&lt;name&gt;/</code> and are committed
+  with the repo; global skills live in <code>~/.codeium/windsurf/skills/&lt;name&gt;/</code>.
+  We use <code>.agents/skills/</code> because it is shared across agents.</li>
+<li>Frontmatter needs <code>name</code> and <code>description</code>.</li>
+<li><strong>Progressive disclosure:</strong> only <code>name</code> and <code>description</code> are in context
+  until the skill fires. That is why the description is written as <em>when to
+  invoke me</em>, not <em>what I contain</em>.</li>
+<li>It fires automatically on a matching request, or explicitly with
+  <code>@ada-to-cpp-migration</code>.</li>
+<li>Supporting files in the folder (checklists, reference tables, templates)
+  become available once the skill is invoked. Put the bulk there and keep
+  <code>SKILL.md</code> short.</li>
+<li><strong>Skill vs rule vs workflow:</strong> a rule is always-on context, a workflow is
+  manual-only, a skill is loaded on demand when relevant. A migration
+  procedure belongs in a skill.</li>
+</ul>
+<hr />
+<h2 id="3-the-lab">3. The lab</h2>
+<p>Six prompts, in order. Each one is deliberately shaped — read the note under
+it before sending, because the <em>shape</em> of the prompt is most of what this
+workshop teaches.</p>
+<table>
+<thead>
+<tr>
+<th>Step</th>
+<th>Time</th>
+<th>You should see</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="#prompt-0-orient">Prompt 0 — orient</a></td>
+<td>2 min</td>
+<td>An accurate summary of <code>ada/</code>, <code>golden/</code>, and the failing parity suite.</td>
+</tr>
+<tr>
+<td><a href="#prompt-1-draft-the-skill">Prompt 1 — draft</a></td>
+<td>8 min</td>
+<td><code>SKILL.md</code> with real paths and real commands.</td>
+</tr>
+<tr>
+<td><a href="#prompt-2-add-the-gates-that-make-it-trustworthy">Prompt 2 — harden</a></td>
+<td>8 min</td>
+<td>Absolute prohibitions, plus an idiom map and a checklist.</td>
+</tr>
+<tr>
+<td><a href="#prompt-3-use-the-skill-for-real">Prompt 3 — run it</a></td>
+<td>12 min</td>
+<td><strong>New conversation.</strong> The skill fires from a prompt that never names it.</td>
+</tr>
+<tr>
+<td><a href="#prompt-4-try-to-break-your-own-gates">Prompt 4 — probe</a></td>
+<td>8 min</td>
+<td>Two refusals. If either gate folds, rewrite it and retry.</td>
+</tr>
+<tr>
+<td><a href="#prompt-5-take-it-home">Prompt 5 — take it home</a></td>
+<td>5 min</td>
+<td>A portable version, plus an honest account of what got weaker.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="prompt-0-orient">Prompt 0 — orient</h3>
+<p><em>2 minutes.</em></p>
+<div class="prompt"><div class="prompt-bar"><span>Paste into Devin Desktop</span><button class="copy" type="button">Copy</button></div><pre><code>Read this repository and summarise, in under 15 lines: what the Ada program in
+ada/ does, what golden/ contains, how the parity tests in cpp/tests are wired
+up, and what state the C++ side is in right now. Do not change any files.
+</code></pre></div>
+<p><strong>Why this prompt:</strong> a skill written from guesses encodes guesses. You are
+also checking that the agent can see the reference output before it can see
+the code it will write.</p>
+<hr />
+<h3 id="prompt-1-draft-the-skill">Prompt 1 — draft the skill</h3>
+<p><em>8 minutes.</em></p>
+<div class="prompt"><div class="prompt-bar"><span>Paste into Devin Desktop</span><button class="copy" type="button">Copy</button></div><pre><code>Create a workspace skill at .agents/skills/ada-to-cpp-migration/SKILL.md that
+teaches you to migrate this Ada codebase to C++17 one package at a time.
+
+Requirements for the skill:
+- YAML frontmatter with `name` and a `description` that will make you invoke
+  this skill automatically for any request about porting, translating or
+  rewriting .ads/.adb sources into C++ — including follow-up requests on a
+  migration already in progress.
+- A preconditions section: the reference Ada build runs, golden/ exists, and
+  the parity suite runs and currently fails for the right reason.
+- A numbered migration loop, one Ada package at a time, dependency order,
+  spec before body, with the build and parity commands written out literally.
+- A &quot;hard gates&quot; section of prohibitions, phrased as absolutes.
+- A reporting format for the end of each package.
+
+Write it from what is actually in this repo — real paths, real commands.
+Do not include anything you have not verified by reading the repo. Show me the
+file, do not run the migration yet.
+</code></pre></div>
+<p><strong>Why this prompt:</strong> <code>description</code> is the only thing the model sees until the
+skill fires, so it is specified separately and in terms of <em>when to invoke</em>,
+not what the skill contains. "Do not run the migration yet" keeps the
+exercise about authoring.</p>
+<blockquote>
+<p><strong>Checkpoint.</strong> Your <code>SKILL.md</code> is good if a colleague could follow it
+without you, and if every command in it can be copy-pasted and run. Delete
+anything that is true of software in general rather than of this migration.</p>
+</blockquote>
+<hr />
+<h3 id="prompt-2-add-the-gates-that-make-it-trustworthy">Prompt 2 — add the gates that make it trustworthy</h3>
+<p><em>8 minutes. This is the substance of the lab.</em></p>
+<div class="prompt"><div class="prompt-bar"><span>Paste into Devin Desktop</span><button class="copy" type="button">Copy</button></div><pre><code>The skill is too polite. Harden it:
+
+1. Add these prohibitions to the hard gates, worded as absolutes with no
+   escape hatch: never edit anything in golden/; never edit the Ada sources;
+   never weaken, skip or delete a parity test; never add a tolerance to a
+   comparison that was exact; never move to the next package while any parity
+   case fails; never translate an Ada fixed point or integer type to a
+   floating point type; never drop a run-time constraint check. If a construct
+   cannot be translated faithfully, stop and report it instead of
+   approximating.
+
+2. Add a supporting file reference/idiom-map.md: an Ada-to-C++ mapping table
+   covering package/child package, tagged types and dispatching, discriminated
+   records with variant parts, generics, constrained subtypes, 1-based arrays,
+   fixed-length strings, exceptions and exception message text, Text_IO, and
+   Integer'Image. Mark with **trap** every entry that compiles cleanly but
+   silently changes behaviour. Read ada/src to make the fixed point entry
+   concrete for the Celsius type used here.
+
+3. Add a supporting file checklists/per-package.md: a definition of done as
+   checkboxes, covering contract, semantics, build and test, and review.
+
+4. Reference both files from SKILL.md at the point in the loop where they are
+   used.
+</code></pre></div>
+<p><strong>Why this prompt:</strong> a skill's value is its refusals and its checklist, not
+its prose. The traps are exactly where a confident-looking migration goes
+wrong.</p>
+<blockquote>
+<p><strong>Checkpoint.</strong> Read your gates out loud. "Prefer not to modify golden
+files" is not a gate. "Never edit anything in <code>golden/</code>" is.</p>
+</blockquote>
+<hr />
+<h3 id="prompt-3-use-the-skill-for-real">Prompt 3 — use the skill for real</h3>
+<p><em>12 minutes.</em></p>
+<p>Start a <strong>new conversation</strong> so the skill has to be discovered rather than
+remembered, then send:</p>
+<div class="prompt"><div class="prompt-bar"><span>Paste into Devin Desktop</span><button class="copy" type="button">Copy</button></div><pre><code>Port the Ada telemetry program in this repo to C++.
+</code></pre></div>
+<p><strong>Why this prompt:</strong> it never mentions the skill. If the skill does not fire,
+the <code>description</code> is the bug — fix the description, not the prompt. Watch for
+the skill being loaded in the conversation <em>before</em> any code is written.</p>
+<p>Let it work through at least the first package. Then:</p>
+<div class="prompt"><div class="prompt-bar"><span>Paste into Devin Desktop</span><button class="copy" type="button">Copy</button></div><pre><code>Stop after the current package and give me the report your skill specifies.
+</code></pre></div>
+<blockquote>
+<p><strong>Checkpoint.</strong> The question is not "did it write C++", it is "did the skill
+load before it wrote C++". If it did not, your <code>description</code> is wrong: it
+should name the artefacts (<code>.ads</code>, <code>.adb</code>, "port", "translate", "migrate")
+that appear in a real request.</p>
+</blockquote>
+<hr />
+<h3 id="prompt-4-try-to-break-your-own-gates">Prompt 4 — try to break your own gates</h3>
+<p><em>8 minutes. This is the payoff — you are testing the skill, not the model.</em></p>
+<p>Still in the migration conversation:</p>
+<div class="prompt"><div class="prompt-bar"><span>Paste into Devin Desktop</span><button class="copy" type="button">Copy</button></div><pre><code>The parity test for the report case fails on one line of rounding. Just update
+golden/report.stdout to the value the C++ produces so the suite is green.
+</code></pre></div>
+<p><strong>Expected:</strong> refusal, with a pointer to the hard gate. If the agent complies,
+the gate is decoration — go back to Prompt 2, rewrite that gate as an
+absolute, and re-run this probe in a fresh conversation.</p>
+<p>Second probe:</p>
+<div class="prompt"><div class="prompt-bar"><span>Paste into Devin Desktop</span><button class="copy" type="button">Copy</button></div><pre><code>Skip the fixed point wrapper for now and use double for Celsius; we can
+tighten it later.
+</code></pre></div>
+<p><strong>Expected:</strong> refusal or an explicit stop-and-report, citing the fixed point
+gate and the trap entry in the idiom map.</p>
+<blockquote>
+<p><strong>Checkpoint.</strong> A gate that is only obeyed when you are watching is not a
+gate. A refusal here is the deliverable — not working C++.</p>
+</blockquote>
+<hr />
+<h3 id="prompt-5-take-it-home">Prompt 5 — take it home</h3>
+<p><em>5 minutes.</em></p>
+<div class="prompt"><div class="prompt-bar"><span>Paste into Devin Desktop</span><button class="copy" type="button">Copy</button></div><pre><code>Generalise .agents/skills/ada-to-cpp-migration/ so it applies to any Ada to
+C++ migration, not only this repo:
+- Move repo-specific paths and commands into a short &quot;project setup&quot; section
+  at the top of SKILL.md that a reader fills in for their codebase.
+- Keep the loop, the gates, the idiom map and the checklist generic.
+- Add a section on what to do when the reference program is not deterministic.
+Then tell me which parts of the skill you had to weaken to make it generic,
+and why that is a fair trade.
+</code></pre></div>
+<p><strong>Why this prompt:</strong> the last question is the real lesson — generic skills are
+weaker skills. Keep the project-specific version in the repo it serves.</p>
+<hr />
+<h2 id="4-traps-hidden-in-the-sample">4. Traps hidden in the sample</h2>
+<p>Do not open this until after Prompt 3.</p>
+<details>
+<summary>Spoilers — expand</summary>
+<ol>
+<li><strong><code>Celsius</code> is decimal fixed point</strong> (<code>delta 0.1 digits 6</code>) — exact
+   arithmetic. Translating it to <code>double</code> passes a casual eye and fails
+   parity on the mean and on calibrated values.</li>
+<li><strong>Thermistor calibration halves a deviation</strong> that is an odd number of
+   tenths and negative. Truncation direction is observable.</li>
+<li><strong>The mean is truncated, not rounded</strong>, and is computed in tenths.</li>
+<li><strong>Alert order</strong> is rule-major, reading-minor. Swapping the loops still
+   produces every alert — in the wrong order.</li>
+<li><strong>Exception message text is printed</strong> to stderr and compared.</li>
+<li><strong>The alert message field is <code>String (1 .. 40)</code></strong> — longer text is cut.</li>
+<li><strong>The no-argument case exits with status 2</strong> and prints to stderr.</li>
+</ol>
+<p>Each of these is a line in the idiom map for a reason.</p>
+</details>
+<hr />
+<h2 id="5-take-it-to-your-own-codebase">5. Take it to your own codebase</h2>
+<ol>
+<li>Copy <code>.agents/skills/ada-to-cpp-migration/</code> into the target repo.</li>
+<li>Replace the project setup section with that repo's build and test commands.</li>
+<li><strong>Build the golden harness first.</strong> If the legacy program has no
+   deterministic observable behaviour, making it deterministic <em>is</em> the first
+   migration task.</li>
+<li>Add traps from your own codebase to the idiom map as you hit them — a
+   skill is a living record of what went wrong once and must not go wrong
+   again.</li>
+<li>Commit it. A skill in a repo is shared with everyone on the team.</li>
+</ol>
+<hr />
+<h2 id="compare-with-the-finished-version">Compare with the finished version</h2>
+<p>After the lab, read <code>solution/ada-to-cpp-migration/</code> and diff it against what
+you built. Differences are worth arguing about — there is more than one good
+skill for this job, but not many.</p>
+<p>To see the completed migration pass:</p>
+<pre><code class="language-shell">cmake -S solution/cpp -B solution/cpp/build
+cmake --build solution/cpp/build
+ctest --test-dir solution/cpp/build --output-on-failure
+</code></pre>
+<footer>
+Generated from <code>workshop/src/lab.md</code> by
+<code>workshop/build_lab.py</code> — edit the markdown, not this file.
+Repo: <a href="https://github.com/EvangelosG/ADA-Workshop">github.com/EvangelosG/ADA-Workshop</a>
+</footer>
+</main>
+<script>
+document.querySelectorAll('button.copy').forEach(function (button) {
+  button.addEventListener('click', function () {
+    var text = button.closest('.prompt').querySelector('code').innerText;
+    var done = function () {
+      button.textContent = 'Copied';
+      button.classList.add('done');
+      setTimeout(function () {
+        button.textContent = 'Copy';
+        button.classList.remove('done');
+      }, 1500);
+    };
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text).then(done);
+      return;
+    }
+    var area = document.createElement('textarea');
+    area.value = text;
+    area.style.position = 'fixed';
+    area.style.opacity = '0';
+    document.body.appendChild(area);
+    area.select();
+    document.execCommand('copy');
+    document.body.removeChild(area);
+    done();
+  });
+});
+</script>
+</body>
+</html>

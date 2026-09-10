@@ -1,3 +1,5 @@
 build/
 *.o
 *.ali
+__pycache__/
+.pytest_cache/
