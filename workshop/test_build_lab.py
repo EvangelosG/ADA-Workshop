@@ -51,7 +51,7 @@ def test_page_is_offline_self_contained(page: str) -> None:
 def test_every_prompt_block_has_a_copy_button(page: str) -> None:
     source = build_lab.SOURCE.read_text(encoding="utf-8")
     expected = source.count("```prompt")
-    assert expected >= 6
+    assert expected >= 7
     assert page.count('class="copy"') == expected
     assert 'class="language-prompt"' not in page
 
@@ -81,13 +81,54 @@ def test_internal_links_resolve(page: str) -> None:
     assert targets <= ids
 
 
-def test_lab_covers_all_six_prompts(page: str) -> None:
-    for step in range(6):
+def test_lab_covers_every_prompt(page: str) -> None:
+    for step in range(7):
         assert f"Prompt {step} —" in page
 
 
 def test_starting_state_is_documented_as_failing(page: str) -> None:
     assert "3 tests failed out of 3" in page
+
+
+def test_lab_targets_devin_local_not_cascade(page: str) -> None:
+    """Cascade was removed in Desktop 3.9.19; its syntax misleads the room."""
+    assert "@ada-to-cpp-migration" not in page
+    assert "/ada-to-cpp-migration" in page
+    assert "~/.codeium/" not in page
+
+
+def test_gate_prompt_separates_per_package_from_completion(page: str) -> None:
+    """An unqualified "never advance while a test fails" deadlocks the lab.
+
+    The parity suite is end to end, so it cannot pass until the last package
+    lands. The hardening prompt has to scope the gate by stage.
+    """
+    assert "never report the migration as complete" in page.lower()
+    assert "has started failing" in page
+
+
+def test_lab_teaches_enforced_as_well_as_prose_gates(page: str) -> None:
+    assert "permissions:" in page
+    assert "Write(golden/**)" in page
+
+
+def test_answer_key_is_not_on_this_branch() -> None:
+    """The lab starts by asking the agent to read the repo — so the finished
+    skill must not be readable from the branch attendees work on.
+    """
+    tracked = subprocess.run(
+        ["git", "ls-files"], cwd=ROOT, capture_output=True, text=True, check=True
+    ).stdout.split()
+    branch = subprocess.run(
+        ["git", "rev-parse", "--abbrev-ref", "HEAD"],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout.strip()
+    if branch == "solution":
+        return
+    assert not [name for name in tracked if name.startswith("solution/")]
 
 
 def test_no_stale_references_to_retired_files() -> None:

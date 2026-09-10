@@ -25,8 +25,12 @@ Work through this before reporting a package as migrated.
 
 - [ ] New sources listed in `cpp/CMakeLists.txt`.
 - [ ] Compiles with `-Wall -Wextra` (or `/W4`) with no new warnings.
-- [ ] Full parity suite green — not just the case related to this package.
+- [ ] No parity case that was passing before this package now fails.
+- [ ] If this package completes the executable's dependency closure, the
+      whole parity suite is green.
 - [ ] No golden file, Ada source, or test was modified.
+- [ ] No fixture name, expected output or test-specific branch appears in the
+      migrated sources.
 
 ## Review
 

@@ -46,6 +46,18 @@ add_parity_test(<case_name> "<argument>")
 
 then capture the matching golden files from the Ada build.
 
+## How much the suite proves
+
+A passing suite is characterization evidence for the behaviour its cases
+cover, not proof that the two programs are equivalent. Treat coverage as a
+deliberate decision: every case is a behaviour someone chose to pin down, and
+every behaviour not pinned down is free to change silently.
+
+The suite is also end-to-end, so it says nothing until the executable's
+whole dependency closure exists. While the migration is partway through, the
+useful signal is "no case that was passing has started failing", not "the
+suite is green".
+
 ## What makes a good case set
 
 - The happy path, exercising every output section.

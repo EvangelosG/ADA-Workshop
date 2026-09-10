@@ -18,8 +18,10 @@ cmake --build cpp/build
 ctest --test-dir cpp/build --output-on-failure
 ```
 
-You need CMake 3.16+ and a C++17 compiler. An Ada toolchain is **not**
-required — the reference outputs are committed in `golden/`.
+You need Devin Desktop 3.9.19 or newer (the material targets the **Devin
+Local** agent; Cascade was removed in that release), CMake 3.16+ and a C++17
+compiler. An Ada toolchain is **not** required — the reference outputs are
+committed in `golden/`.
 
 ## Presenters start here
 
@@ -50,14 +52,27 @@ pytest workshop/test_build_lab.py
 | `ada/` | Reference implementation: 5 packages, ~450 lines. Read-only during the lab. |
 | `golden/` | Captured stdout, stderr and exit status of the Ada program — the specification. |
 | `cpp/` | Where the migration goes: a stub `main.cpp` plus the parity harness. |
-| `solution/cpp/` | A completed migration that passes every parity case. |
-| `solution/ada-to-cpp-migration/` | The finished skill. |
 | `workshop/lab.html` | The attendee page (generated from `workshop/src/lab.md`). |
 | `workshop/` | Slides, talk track, and the attendee page generator. |
 
-The finished skill lives under `solution/` rather than `.agents/skills/` on
-purpose: if it were in a skill directory, Devin Desktop would load it during
-the lab and there would be nothing to build.
+## The answer key
+
+The finished skill and a completed migration live on the **`solution`
+branch**, not here. Keeping them off this branch is deliberate: the lab opens
+by asking the agent to read the repository, and an agent that finds a
+finished `SKILL.md` while orienting itself has nothing left to teach.
+
+```bash
+git fetch origin solution
+git show origin/solution:solution/ada-to-cpp-migration/SKILL.md
+
+# or check it out beside your clone, leaving your work untouched
+git worktree add ../ada-workshop-solution origin/solution
+```
+
+The `solution-v1` tag pins the version a given cohort was shown. The branch is
+this branch plus `solution/`; rebase it when the lab materials change, so the
+answer key never drifts from the sample it answers.
 
 ## Running the reference implementation (optional)
 
@@ -69,6 +84,8 @@ make -C ada golden    # regenerate golden/ (only if the Ada sources change)
 ```
 
 ## Checking the solution
+
+From a checkout of the `solution` branch:
 
 ```bash
 cmake -S solution/cpp -B solution/cpp/build
