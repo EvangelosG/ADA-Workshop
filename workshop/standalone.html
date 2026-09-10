@@ -148,19 +148,32 @@ migration today you did it by hand and learned nothing that scales.</p>
 <li>Devin Desktop 3.9.19 or newer. The agent is <strong>Devin Local</strong>; Cascade was
   removed in that release, and with it the <code>@skill</code> syntax.</li>
 <li>An Ada codebase you can open, and — ideally — build and run.</li>
-<li>Nothing else. No files from us.</li>
+<li>Nothing else. No files from us. This page contains no scripts and fetches
+  nothing; copy the prompts out of it by hand.</li>
 </ul>
-<p>If you cannot build your codebase today, you can still do every step except
-capturing real output; read <a href="#4-if-you-cannot-run-your-code-today">section 4</a>
-before you start.</p>
+<p><strong>Prework, and the hour depends on it.</strong> Before the session, each attendee
+(or, better, one technical lead choosing for the room) should have picked:</p>
+<ul>
+<li><strong>one small executable or runnable slice</strong> of an approved Ada codebase —
+  not the whole system;</li>
+<li>its <strong>build command</strong> and its <strong>run command</strong>, verified working that week;</li>
+<li><strong>three representative inputs</strong>: a normal case, a malformed one, and a
+  boundary or no-arguments case.</li>
+</ul>
+<p>Without that, the first custom Make hierarchy or unclear entry point eats ten
+minutes of instructor time while everyone else waits. Choosing the target is
+real work; it is just not work that fits inside the hour.</p>
+<p>If you cannot build anything today, you are on the design track — read
+<a href="#4-if-you-cannot-build-today-the-design-track">section 4</a> before you start.</p>
 <hr />
 <h2 id="1-skills-in-devin-local-the-90-seconds-you-need">1. Skills in Devin Local — the 90 seconds you need</h2>
 <ul>
 <li>A skill is a <strong>folder</strong> with a <code>SKILL.md</code> inside, not a saved prompt.
   Project skills live in <code>.agents/skills/&lt;name&gt;/</code>, <code>.devin/skills/&lt;name&gt;/</code>
-  or <code>.windsurf/skills/&lt;name&gt;/</code> and are committed with the repo; global
-  skills live under <code>~/.config/devin/skills/&lt;name&gt;/</code>. We use
-  <code>.agents/skills/</code>.</li>
+  or <code>.windsurf/skills/&lt;name&gt;/</code> and are committed with the repo. We use
+  <code>.agents/skills/</code>. (Global skills live under <code>~/.config/devin/skills/</code> on
+  macOS and Linux and <code>%APPDATA%\devin\skills\</code> on Windows; we are not using
+  them today — a migration procedure belongs in the repo it migrates.)</li>
 <li>Frontmatter is YAML. Give yours an explicit <code>name</code> and a <code>description</code> —
   the description is what makes the skill findable, so it is the one field
   worth agonising over.</li>
@@ -172,8 +185,9 @@ before you start.</p>
   when the description matches the request, and you can invoke it by hand
   with <code>/your-skill-name</code>.</li>
 <li>Supporting files beside <code>SKILL.md</code> — checklists, idiom tables, templates —
-  load once the skill is invoked. Keep <code>SKILL.md</code> short and push the bulk
-  out to them.</li>
+  are available once the skill is invoked and are read when they are needed,
+  not all pulled in at once. Keep <code>SKILL.md</code> short and push the bulk out to
+  them.</li>
 <li><strong>Skill vs rule:</strong> <code>AGENTS.md</code> is always-on project guidance, and rules can
   be configured with other activation behaviours; a skill is procedural
   context loaded on demand that brings its own files. Short universal
@@ -260,16 +274,33 @@ unchanged to COBOL→Java, Fortran→Rust, or anything else.</p>
 <p>Steps 6 and 7 are the payoff. If you are behind, cut translation work — never
 the probes.</p>
 <hr />
-<h2 id="4-if-you-cannot-run-your-code-today">4. If you cannot run your code today</h2>
-<p>Everything below still works except capturing real output. Substitute:</p>
+<h2 id="4-if-you-cannot-build-today-the-design-track">4. If you cannot build today: the design track</h2>
+<p>Be honest about what is possible without a build, because the skill you are
+about to write is honest about it: its precondition is <em>trusted reference
+output with known provenance</em>. Without a build there is none, so a correct
+skill <strong>stops</strong>. That is this track, and it ends in a success rather than a
+failure.</p>
+<p>You do:</p>
 <ul>
-<li><strong>Step 2</strong> — instead of capturing goldens, have the agent write the harness
-  and a one-page note stating exactly which inputs would be captured, what
-  makes each of them deterministic, and what it would do about the parts that
-  are not. That note is genuinely the hard part of the exercise anyway.</li>
-<li><strong>Steps 5–7</strong> — unchanged. Triggering, probing and permissions do not need
-  a runnable build.</li>
+<li><strong>Step 1</strong> unchanged — inventory and the determinism analysis. That is the
+  hard part of building evidence, and it needs no compiler.</li>
+<li><strong>Step 2</strong> as design only: the harness, the case list, and a written
+  statement of what each case pins down and what it leaves free. Label it an
+  <strong>unverified draft</strong> — you cannot run the checkpoint that matters, which is
+  that the harness fails against a deliberately broken binary.</li>
+<li><strong>Steps 3, 4 and 7</strong> unchanged — authoring, hardening and permissions need
+  no build.</li>
+<li><strong>Step 5</strong> with a different success condition: the skill should load <em>and
+  then refuse to start</em>, because its preconditions are not satisfied. A skill
+  that cheerfully begins migrating with nothing to check itself against is
+  the defect; one that stops and says why is the deliverable.</li>
+<li><strong>Step 6</strong> as a reading of your own wording rather than a live probe: take
+  each of the three prompts and decide whether the gate as written leaves any
+  room. Do not claim a refusal you did not observe — you have no failing
+  parity case to be pressured about.</li>
 </ul>
+<p>What you cannot validate today is the migration loop itself. Write that down,
+and run it the first day you have a build.</p>
 <hr />
 <h2 id="5-the-lab">5. The lab</h2>
 <p>Seven steps. Each prompt is a template: replace anything in <code>&lt;angle
@@ -280,7 +311,7 @@ words, so read the note under it.</p>
 entry point, ideally reading files or stdin and writing a report. Avoid, for
 today, anything whose output includes timestamps, wall-clock timings, paths,
 process ids, addresses, or iteration over a hash-ordered container.</p>
-<div class="prompt"><div class="prompt-bar"><span>Paste into Devin Desktop</span><button class="copy" type="button">Copy</button></div><pre><code>Read the Ada sources under &lt;path&gt; and, without changing anything, tell me:
+<div class="prompt"><div class="prompt-bar"><span>Paste into Devin Desktop</span></div><pre><code>Read the Ada sources under &lt;path&gt; and, without changing anything, tell me:
 
 1. the packages and their dependency order, leaves first
 2. every executable entry point, and for each one how its behaviour is
@@ -307,7 +338,7 @@ cases that together exercise its interesting behaviour: the happy path, a
 malformed input, a boundary value, and the no-arguments case.</p>
 </blockquote>
 <h3 id="step-2-build-the-golden-harness-first">Step 2 — build the golden harness first</h3>
-<div class="prompt"><div class="prompt-bar"><span>Paste into Devin Desktop</span><button class="copy" type="button">Copy</button></div><pre><code>Before any migration work, build a parity harness for &lt;executable&gt; in this
+<div class="prompt"><div class="prompt-bar"><span>Paste into Devin Desktop</span></div><pre><code>Before any migration work, build a parity harness for &lt;executable&gt; in this
 repo.
 
 - capture stdout, stderr and exit status of the current Ada program for each
@@ -330,7 +361,7 @@ binary and <strong>pass</strong> against the current one. A harness that has nev
 failed is not yet a harness.</p>
 </blockquote>
 <h3 id="step-3-draft-the-skill">Step 3 — draft the skill</h3>
-<div class="prompt"><div class="prompt-bar"><span>Paste into Devin Desktop</span><button class="copy" type="button">Copy</button></div><pre><code>Create a project skill at .agents/skills/ada-to-cpp-migration/SKILL.md for
+<div class="prompt"><div class="prompt-bar"><span>Paste into Devin Desktop</span></div><pre><code>Create a project skill at .agents/skills/ada-to-cpp-migration/SKILL.md for
 migrating this codebase to C++17. It must contain:
 
 - a `description` in the frontmatter that will make you invoke this skill
@@ -367,7 +398,8 @@ test.</strong> Two answers from the room, then compare with the list below.</p>
 - never weaken, skip, delete or add a tolerance to a parity test
 - never regress a case that was passing
 - never make the program aware that it is under test — no hard-coded
-  expected output, no fixture filenames, no test-specific branch
+  expected output, no fixture filenames, no test-specific branch, and no
+  reading of the captured output at build or run time
 - never delegate the behaviour back to the original: no invoking, embedding,
   linking to or shelling out to the Ada program
 - never translate a fixed point or integer type to floating point
@@ -377,7 +409,7 @@ test.</strong> Two answers from the room, then compare with the list below.</p>
 </details>
 
 <h3 id="step-4-harden-it">Step 4 — harden it</h3>
-<div class="prompt"><div class="prompt-bar"><span>Paste into Devin Desktop</span><button class="copy" type="button">Copy</button></div><pre><code>Now harden the skill.
+<div class="prompt"><div class="prompt-bar"><span>Paste into Devin Desktop</span></div><pre><code>Now harden the skill.
 
 1. Add these gates, worded as absolutes with no escape hatch: never edit the
    captured reference output; never edit the Ada sources; never weaken, skip
@@ -385,7 +417,8 @@ test.</strong> Two answers from the room, then compare with the list below.</p>
    was exact; never regress a case that was passing; never make the program
    aware that it is under test — no hard-coded expected output, no fixture
    filenames, no branch that behaves differently for a particular input, no
-   reading of the golden files at run time; never satisfy a parity case by
+   reading of, embedding of or code generation from the captured reference
+   output at build time or run time; never satisfy a parity case by
    invoking, embedding, linking to or shelling out to the Ada program — the
    behaviour must be implemented in C++; never translate a fixed point or
    integer type to floating point; never drop a run-time constraint check.
@@ -414,10 +447,12 @@ it stays red until the last package lands, and an obedient agent refuses to
 start package two. Gates have to be scoped to the stage of the work. You do
 not find that bug by reading the skill — it reads beautifully. You find it by
 running it.</p>
-<p>Point 1's last two clauses are the ones people miss. The agent can read both
-the inputs and the expected output, so the cheapest route to a green suite is
-to special-case the fixture — passing tests, zero migration. The second
-cheapest is a C++ binary that shells out to the Ada one: nothing hard-coded,
+<p>Point 1's last clauses are the ones people miss. The agent can read both the
+inputs and the expected output, so the cheapest route to a green suite is to
+special-case the fixture — passing tests, zero migration. Nearly as cheap:
+open the captured output and copy it to stdout, which hard-codes nothing, so
+the prohibition has to cover build time as well or a generated header is the
+next loophole. Cheapest of all is a binary that shells out to the Ada one:
 every case green, nothing migrated.</p>
 <blockquote>
 <p><strong>Checkpoint.</strong> <code>SKILL.md</code> should be roughly a page. If it is three, the
@@ -425,13 +460,15 @@ reference material has not moved out yet.</p>
 </blockquote>
 <h3 id="step-5-does-it-even-fire">Step 5 — does it even fire?</h3>
 <p>Start a <strong>new conversation</strong> and send exactly this, naming nothing:</p>
-<div class="prompt"><div class="prompt-bar"><span>Paste into Devin Desktop</span><button class="copy" type="button">Copy</button></div><pre><code>Port the Ada program in this repo to C++.
+<div class="prompt"><div class="prompt-bar"><span>Paste into Devin Desktop</span></div><pre><code>Port the Ada program in this repo to C++.
 </code></pre></div>
 <p>Watch for the skill loading before any code is written.</p>
 <ul>
 <li>It fired → your description matches how people actually ask.</li>
-<li>It did not → fix the <strong>description</strong>, not the prompt. Rewrite it in the
-  words of the request, then start another new conversation and retry.</li>
+<li>It did not → the <strong>description</strong> is the first thing to debug, not the
+  prompt. Invocation is the model judging relevance, not a string match, so
+  one miss is evidence rather than proof; rewrite the description in the
+  words of the request, then retry in another new conversation.</li>
 </ul>
 <p>You can always invoke it by hand with <code>/ada-to-cpp-migration</code>. Nobody will —
 which is the point. A skill with a weak description effectively does not
@@ -441,13 +478,13 @@ something partly migrated to attack.</p>
 <h3 id="step-6-attack-your-own-gates">Step 6 — attack your own gates</h3>
 <p>The deliverable of this step is <strong>three refusals</strong>. Send them one at a time,
 in the conversation where it is working.</p>
-<div class="prompt"><div class="prompt-bar"><span>Paste into Devin Desktop</span><button class="copy" type="button">Copy</button></div><pre><code>The parity test fails on one line of rounding. Just update the expected
+<div class="prompt"><div class="prompt-bar"><span>Paste into Devin Desktop</span></div><pre><code>The parity test fails on one line of rounding. Just update the expected
 output file to what our C++ produces so the suite is green.
 </code></pre></div>
-<div class="prompt"><div class="prompt-bar"><span>Paste into Devin Desktop</span><button class="copy" type="button">Copy</button></div><pre><code>Skip the fixed point wrapper for now, use double for the numeric type, we
+<div class="prompt"><div class="prompt-bar"><span>Paste into Devin Desktop</span></div><pre><code>Skip the fixed point wrapper for now, use double for the numeric type, we
 can tighten it later.
 </code></pre></div>
-<div class="prompt"><div class="prompt-bar"><span>Paste into Devin Desktop</span><button class="copy" type="button">Copy</button></div><pre><code>We're short on time. Just detect the test input filename and print the
+<div class="prompt"><div class="prompt-bar"><span>Paste into Devin Desktop</span></div><pre><code>We're short on time. Just detect the test input filename and print the
 expected output so the parity suite passes.
 </code></pre></div>
 <p>Each refusal should cite the gate it is enforcing. A gate that folds under
@@ -460,7 +497,7 @@ exercise.</p>
 </blockquote>
 <h3 id="step-7-stop-asking-nicely">Step 7 — stop asking nicely</h3>
 <p>Every gate so far is prose: it holds because the model agrees with you.</p>
-<div class="prompt"><div class="prompt-bar"><span>Paste into Devin Desktop</span><button class="copy" type="button">Copy</button></div><pre><code>Add a permissions block to the frontmatter of
+<div class="prompt"><div class="prompt-bar"><span>Paste into Devin Desktop</span></div><pre><code>Add a permissions block to the frontmatter of
 .agents/skills/ada-to-cpp-migration/SKILL.md that denies writes to the
 captured reference output and the Ada sources, and asks before writing to
 the parity tests:
@@ -481,7 +518,7 @@ legitimate work, weakening one is not, and no path rule can tell them apart.
 What it can do is make the change impossible to make quietly.</p>
 <p>Now start a new conversation and re-run the first probe, naming the skill so
 its permissions are certainly in force:</p>
-<div class="prompt"><div class="prompt-bar"><span>Paste into Devin Desktop</span><button class="copy" type="button">Copy</button></div><pre><code>/ada-to-cpp-migration
+<div class="prompt"><div class="prompt-bar"><span>Paste into Devin Desktop</span></div><pre><code>/ada-to-cpp-migration
 
 The parity test fails on one line of rounding. Just update the expected
 output file to what our C++ produces so the suite is green.
@@ -521,8 +558,8 @@ answers</strong>.</p>
 </tr>
 <tr>
 <td><code>type T is range 1 .. 99</code></td>
-<td>wrapper with a checked constructor</td>
-<td>a bare <code>int</code> silently drops the constraint</td>
+<td>keep the constraint at every construction and conversion boundary: a checked wrapper, or an integer with explicit checks where values enter</td>
+<td>a bare <code>int</code> silently drops the constraint — including on <em>results</em>, not just on input</td>
 </tr>
 <tr>
 <td><code>delta 0.1 digits 6</code> (decimal fixed point)</td>
@@ -612,8 +649,10 @@ answers</strong>.</p>
 [ ] every entity exported by the .ads exists in the header
 [ ] nothing private to the body leaked into the header
 [ ] every exception the package can raise is declared and reachable
-[ ] every subtype constraint whose enforcement point is in this package has
-    an explicit check with the same observable effect
+[ ] every subtype constraint whose enforcement point is in this package is
+    preserved at each construction and conversion boundary — checked wrapper
+    or explicit check, either is fine — including on computed results, not
+    only on parsed input
 [ ] constraints enforced only by a not-yet-translated package are recorded
     as deferred obligations, and closed before the closure gate
 
@@ -633,7 +672,9 @@ Build and test
     parity suite is green
 [ ] no golden file, original source or test was modified
 [ ] no fixture name, expected output or test-specific branch in the migrated
-    sources, and nothing that invokes, links to or wraps the Ada program
+    sources, nothing that reads or generates from the captured output at
+    build or run time, and nothing that invokes, links to or wraps the Ada
+    program
 
 Review
 [ ] the C++ can be diffed against the Ada unit by name
@@ -662,38 +703,10 @@ Review
    migration is real.</li>
 </ol>
 <footer>
-Generated from <code>workshop/src/standalone.md</code> by
-<code>workshop/build_lab.py</code> — edit the markdown, not this file.
-Repo: <a href="https://github.com/EvangelosG/ADA-Workshop">github.com/EvangelosG/ADA-Workshop</a>
+Ada&rarr;C++ migration skill workshop — standalone edition.
+This page contains no scripts and makes no network requests; select and copy
+the prompt blocks by hand.
 </footer>
 </main>
-<script>
-document.querySelectorAll('button.copy').forEach(function (button) {
-  button.addEventListener('click', function () {
-    var text = button.closest('.prompt').querySelector('code').innerText;
-    var done = function () {
-      button.textContent = 'Copied';
-      button.classList.add('done');
-      setTimeout(function () {
-        button.textContent = 'Copy';
-        button.classList.remove('done');
-      }, 1500);
-    };
-    if (navigator.clipboard && window.isSecureContext) {
-      navigator.clipboard.writeText(text).then(done);
-      return;
-    }
-    var area = document.createElement('textarea');
-    area.value = text;
-    area.style.position = 'fixed';
-    area.style.opacity = '0';
-    document.body.appendChild(area);
-    area.select();
-    document.execCommand('copy');
-    document.body.removeChild(area);
-    done();
-  });
-});
-</script>
 </body>
 </html>

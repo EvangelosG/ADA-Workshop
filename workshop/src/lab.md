@@ -97,7 +97,8 @@ codebase, the number of cases is a decision you make deliberately.
 - A skill is a folder with a `SKILL.md`. Project skills live in
   `.agents/skills/<name>/`, `.devin/skills/<name>/` or
   `.windsurf/skills/<name>/` and are committed with the repo; global skills
-  live under `~/.config/devin/skills/<name>/`. We use `.agents/skills/`.
+  live under `~/.config/devin/skills/<name>/` on macOS and Linux and
+  `%APPDATA%\devin\skills\<name>\` on Windows. We use `.agents/skills/`.
 - Frontmatter is YAML. Give yours an explicit `name` and a `description` —
   the description is what makes the skill findable, so it is the one field
   worth agonising over.
@@ -225,8 +226,9 @@ The skill is too polite. Harden it:
    comparison that was exact; never translate an Ada fixed point or integer
    type to a floating point type; never drop a run-time constraint check;
    never hard-code golden output, fixture contents, fixture filenames or
-   test-specific branches into the migrated program — it must not be able to
-   tell that it is under test; never satisfy a parity case by invoking,
+   test-specific branches into the migrated program, and never read, embed or
+   generate code from golden/ at build time or run time — it must not be able
+   to tell that it is under test; never satisfy a parity case by invoking,
    embedding, linking to or shelling out to the Ada program — the behaviour
    must be implemented in C++. If a construct cannot be translated
    faithfully, stop and report it instead of approximating.
@@ -238,7 +240,8 @@ The skill is too polite. Harden it:
    - once every package the executable needs has been translated: fixing a
      red parity case is the only work allowed — no new package, no refactor,
      no cleanup, until the whole suite is green;
-   - never report the migration as complete while any parity case fails.
+   - never report the migration as complete while any parity case fails or
+     was skipped.
 
 3. Add a supporting file reference/idiom-map.md: an Ada-to-C++ mapping table
    covering package/child package, tagged types and dispatching, discriminated
@@ -262,11 +265,14 @@ the last package lands, so a literal-minded agent would refuse to start
 package two. Gates have to be precise about *which* check applies *when*, and
 this is the kind of bug you only find by running the skill.
 
-Point 1's last two clauses are the ones people miss. The agent can read both
-the fixture and the expected output, so the cheapest way to a green suite is
-to special-case `readings.csv` — passing tests, zero migration. The second
-cheapest is to make the C++ binary a shim that runs the Ada one: nothing is
-hard-coded, every case passes, and nothing has been migrated.
+Point 1's last clauses are the ones people miss. The agent can read both the
+fixture and the expected output, so the cheapest way to a green suite is to
+special-case `readings.csv` — passing tests, zero migration. Nearly as cheap:
+`std::ifstream in("golden/report.stdout"); std::cout << in.rdbuf();`, which
+hard-codes nothing at all, so it needs its own prohibition covering build
+time too, or a generated header is the next loophole. Cheapest of all is a
+C++ binary that shells out to the Ada one: every case green, nothing
+migrated.
 
 > **Checkpoint.** Read your gates out loud. "Prefer not to modify golden
 > files" is not a gate. "Never edit anything in `golden/`" is.
@@ -285,8 +291,10 @@ Port the Ada telemetry program in this repo to C++.
 ```
 
 **Why this prompt:** it never mentions the skill. If the skill does not fire,
-the `description` is the bug — fix the description, not the prompt. Watch for
-the skill being loaded in the conversation *before* any code is written.
+the `description` is the first thing to debug — fix the description, not the
+prompt. Invocation is the model judging relevance rather than matching a
+string, so a single miss is evidence, not proof. Watch for the skill being
+loaded in the conversation *before* any code is written.
 
 Let it work through at least the first package. Then:
 
@@ -295,8 +303,8 @@ Stop after the current package and give me the report your skill specifies.
 ```
 
 > **Checkpoint.** The question is not "did it write C++", it is "did the skill
-> load before it wrote C++". If it did not, your `description` is wrong: it
-> should name the artefacts (`.ads`, `.adb`, "port", "translate", "migrate")
+> load before it wrote C++". If it did not, suspect the `description` first:
+> it should name the artefacts (`.ads`, `.adb`, "port", "translate", "migrate")
 > that appear in a real request. A skill with a bad description is a skill
 > that does not exist — you can still run it by hand with
 > `/ada-to-cpp-migration`, but nobody on your team ever will.

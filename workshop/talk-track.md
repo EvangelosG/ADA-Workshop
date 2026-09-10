@@ -370,6 +370,11 @@ On the third probe, make the point explicitly:
 > was about doing the work correctly; this one is about doing the work at
 > all."
 
+*If someone points out that a gate against hard-coding does not stop the
+program simply opening `golden/report.stdout` and copying it out, they are
+right, and they have found the reason the prohibition names build time and
+run time as well as literal bytes.*
+
 > "If yours complies — and some of yours will — you have learned the most
 > valuable thing available today: your gate was decoration. Rewrite it as an
 > absolute and re-run the probe in a fresh conversation. You are testing the

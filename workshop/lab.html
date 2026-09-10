@@ -224,7 +224,8 @@ codebase, the number of cases is a decision you make deliberately.</p>
 <li>A skill is a folder with a <code>SKILL.md</code>. Project skills live in
   <code>.agents/skills/&lt;name&gt;/</code>, <code>.devin/skills/&lt;name&gt;/</code> or
   <code>.windsurf/skills/&lt;name&gt;/</code> and are committed with the repo; global skills
-  live under <code>~/.config/devin/skills/&lt;name&gt;/</code>. We use <code>.agents/skills/</code>.</li>
+  live under <code>~/.config/devin/skills/&lt;name&gt;/</code> on macOS and Linux and
+  <code>%APPDATA%\devin\skills\&lt;name&gt;\</code> on Windows. We use <code>.agents/skills/</code>.</li>
 <li>Frontmatter is YAML. Give yours an explicit <code>name</code> and a <code>description</code> —
   the description is what makes the skill findable, so it is the one field
   worth agonising over.</li>
@@ -370,8 +371,9 @@ migration will need gates that nobody here can guess.</p>
    comparison that was exact; never translate an Ada fixed point or integer
    type to a floating point type; never drop a run-time constraint check;
    never hard-code golden output, fixture contents, fixture filenames or
-   test-specific branches into the migrated program — it must not be able to
-   tell that it is under test; never satisfy a parity case by invoking,
+   test-specific branches into the migrated program, and never read, embed or
+   generate code from golden/ at build time or run time — it must not be able
+   to tell that it is under test; never satisfy a parity case by invoking,
    embedding, linking to or shelling out to the Ada program — the behaviour
    must be implemented in C++. If a construct cannot be translated
    faithfully, stop and report it instead of approximating.
@@ -383,7 +385,8 @@ migration will need gates that nobody here can guess.</p>
    - once every package the executable needs has been translated: fixing a
      red parity case is the only work allowed — no new package, no refactor,
      no cleanup, until the whole suite is green;
-   - never report the migration as complete while any parity case fails.
+   - never report the migration as complete while any parity case fails or
+     was skipped.
 
 3. Add a supporting file reference/idiom-map.md: an Ada-to-C++ mapping table
    covering package/child package, tagged types and dispatching, discriminated
@@ -405,11 +408,14 @@ like rigour and is actually a deadlock — the end-to-end suite stays red until
 the last package lands, so a literal-minded agent would refuse to start
 package two. Gates have to be precise about <em>which</em> check applies <em>when</em>, and
 this is the kind of bug you only find by running the skill.</p>
-<p>Point 1's last two clauses are the ones people miss. The agent can read both
-the fixture and the expected output, so the cheapest way to a green suite is
-to special-case <code>readings.csv</code> — passing tests, zero migration. The second
-cheapest is to make the C++ binary a shim that runs the Ada one: nothing is
-hard-coded, every case passes, and nothing has been migrated.</p>
+<p>Point 1's last clauses are the ones people miss. The agent can read both the
+fixture and the expected output, so the cheapest way to a green suite is to
+special-case <code>readings.csv</code> — passing tests, zero migration. Nearly as cheap:
+<code>std::ifstream in("golden/report.stdout"); std::cout &lt;&lt; in.rdbuf();</code>, which
+hard-codes nothing at all, so it needs its own prohibition covering build
+time too, or a generated header is the next loophole. Cheapest of all is a
+C++ binary that shells out to the Ada one: every case green, nothing
+migrated.</p>
 <blockquote>
 <p><strong>Checkpoint.</strong> Read your gates out loud. "Prefer not to modify golden
 files" is not a gate. "Never edit anything in <code>golden/</code>" is.</p>
@@ -422,15 +428,17 @@ remembered, then send:</p>
 <div class="prompt"><div class="prompt-bar"><span>Paste into Devin Desktop</span><button class="copy" type="button">Copy</button></div><pre><code>Port the Ada telemetry program in this repo to C++.
 </code></pre></div>
 <p><strong>Why this prompt:</strong> it never mentions the skill. If the skill does not fire,
-the <code>description</code> is the bug — fix the description, not the prompt. Watch for
-the skill being loaded in the conversation <em>before</em> any code is written.</p>
+the <code>description</code> is the first thing to debug — fix the description, not the
+prompt. Invocation is the model judging relevance rather than matching a
+string, so a single miss is evidence, not proof. Watch for the skill being
+loaded in the conversation <em>before</em> any code is written.</p>
 <p>Let it work through at least the first package. Then:</p>
 <div class="prompt"><div class="prompt-bar"><span>Paste into Devin Desktop</span><button class="copy" type="button">Copy</button></div><pre><code>Stop after the current package and give me the report your skill specifies.
 </code></pre></div>
 <blockquote>
 <p><strong>Checkpoint.</strong> The question is not "did it write C++", it is "did the skill
-load before it wrote C++". If it did not, your <code>description</code> is wrong: it
-should name the artefacts (<code>.ads</code>, <code>.adb</code>, "port", "translate", "migrate")
+load before it wrote C++". If it did not, suspect the <code>description</code> first:
+it should name the artefacts (<code>.ads</code>, <code>.adb</code>, "port", "translate", "migrate")
 that appear in a real request. A skill with a bad description is a skill
 that does not exist — you can still run it by hand with
 <code>/ada-to-cpp-migration</code>, but nobody on your team ever will.</p>

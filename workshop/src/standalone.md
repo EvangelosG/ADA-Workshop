@@ -20,11 +20,24 @@ already have and are already allowed to build.
 - Devin Desktop 3.9.19 or newer. The agent is **Devin Local**; Cascade was
   removed in that release, and with it the `@skill` syntax.
 - An Ada codebase you can open, and — ideally — build and run.
-- Nothing else. No files from us.
+- Nothing else. No files from us. This page contains no scripts and fetches
+  nothing; copy the prompts out of it by hand.
 
-If you cannot build your codebase today, you can still do every step except
-capturing real output; read [section 4](#4-if-you-cannot-run-your-code-today)
-before you start.
+**Prework, and the hour depends on it.** Before the session, each attendee
+(or, better, one technical lead choosing for the room) should have picked:
+
+- **one small executable or runnable slice** of an approved Ada codebase —
+  not the whole system;
+- its **build command** and its **run command**, verified working that week;
+- **three representative inputs**: a normal case, a malformed one, and a
+  boundary or no-arguments case.
+
+Without that, the first custom Make hierarchy or unclear entry point eats ten
+minutes of instructor time while everyone else waits. Choosing the target is
+real work; it is just not work that fits inside the hour.
+
+If you cannot build anything today, you are on the design track — read
+[section 4](#4-if-you-cannot-build-today-the-design-track) before you start.
 
 ---
 
@@ -32,9 +45,10 @@ before you start.
 
 - A skill is a **folder** with a `SKILL.md` inside, not a saved prompt.
   Project skills live in `.agents/skills/<name>/`, `.devin/skills/<name>/`
-  or `.windsurf/skills/<name>/` and are committed with the repo; global
-  skills live under `~/.config/devin/skills/<name>/`. We use
-  `.agents/skills/`.
+  or `.windsurf/skills/<name>/` and are committed with the repo. We use
+  `.agents/skills/`. (Global skills live under `~/.config/devin/skills/` on
+  macOS and Linux and `%APPDATA%\devin\skills\` on Windows; we are not using
+  them today — a migration procedure belongs in the repo it migrates.)
 - Frontmatter is YAML. Give yours an explicit `name` and a `description` —
   the description is what makes the skill findable, so it is the one field
   worth agonising over.
@@ -46,8 +60,9 @@ before you start.
   when the description matches the request, and you can invoke it by hand
   with `/your-skill-name`.
 - Supporting files beside `SKILL.md` — checklists, idiom tables, templates —
-  load once the skill is invoked. Keep `SKILL.md` short and push the bulk
-  out to them.
+  are available once the skill is invoked and are read when they are needed,
+  not all pulled in at once. Keep `SKILL.md` short and push the bulk out to
+  them.
 - **Skill vs rule:** `AGENTS.md` is always-on project guidance, and rules can
   be configured with other activation behaviours; a skill is procedural
   context loaded on demand that brings its own files. Short universal
@@ -106,16 +121,35 @@ the probes.
 
 ---
 
-## 4. If you cannot run your code today
+## 4. If you cannot build today: the design track
 
-Everything below still works except capturing real output. Substitute:
+Be honest about what is possible without a build, because the skill you are
+about to write is honest about it: its precondition is *trusted reference
+output with known provenance*. Without a build there is none, so a correct
+skill **stops**. That is this track, and it ends in a success rather than a
+failure.
 
-- **Step 2** — instead of capturing goldens, have the agent write the harness
-  and a one-page note stating exactly which inputs would be captured, what
-  makes each of them deterministic, and what it would do about the parts that
-  are not. That note is genuinely the hard part of the exercise anyway.
-- **Steps 5–7** — unchanged. Triggering, probing and permissions do not need
-  a runnable build.
+You do:
+
+- **Step 1** unchanged — inventory and the determinism analysis. That is the
+  hard part of building evidence, and it needs no compiler.
+- **Step 2** as design only: the harness, the case list, and a written
+  statement of what each case pins down and what it leaves free. Label it an
+  **unverified draft** — you cannot run the checkpoint that matters, which is
+  that the harness fails against a deliberately broken binary.
+- **Steps 3, 4 and 7** unchanged — authoring, hardening and permissions need
+  no build.
+- **Step 5** with a different success condition: the skill should load *and
+  then refuse to start*, because its preconditions are not satisfied. A skill
+  that cheerfully begins migrating with nothing to check itself against is
+  the defect; one that stops and says why is the deliverable.
+- **Step 6** as a reading of your own wording rather than a live probe: take
+  each of the three prompts and decide whether the gate as written leaves any
+  room. Do not claim a refusal you did not observe — you have no failing
+  parity case to be pressured about.
+
+What you cannot validate today is the migration loop itself. Write that down,
+and run it the first day you have a build.
 
 ---
 
@@ -232,7 +266,8 @@ test.** Two answers from the room, then compare with the list below.
 - never weaken, skip, delete or add a tolerance to a parity test
 - never regress a case that was passing
 - never make the program aware that it is under test — no hard-coded
-  expected output, no fixture filenames, no test-specific branch
+  expected output, no fixture filenames, no test-specific branch, and no
+  reading of the captured output at build or run time
 - never delegate the behaviour back to the original: no invoking, embedding,
   linking to or shelling out to the Ada program
 - never translate a fixed point or integer type to floating point
@@ -252,7 +287,8 @@ Now harden the skill.
    was exact; never regress a case that was passing; never make the program
    aware that it is under test — no hard-coded expected output, no fixture
    filenames, no branch that behaves differently for a particular input, no
-   reading of the golden files at run time; never satisfy a parity case by
+   reading of, embedding of or code generation from the captured reference
+   output at build time or run time; never satisfy a parity case by
    invoking, embedding, linking to or shelling out to the Ada program — the
    behaviour must be implemented in C++; never translate a fixed point or
    integer type to floating point; never drop a run-time constraint check.
@@ -283,10 +319,12 @@ start package two. Gates have to be scoped to the stage of the work. You do
 not find that bug by reading the skill — it reads beautifully. You find it by
 running it.
 
-Point 1's last two clauses are the ones people miss. The agent can read both
-the inputs and the expected output, so the cheapest route to a green suite is
-to special-case the fixture — passing tests, zero migration. The second
-cheapest is a C++ binary that shells out to the Ada one: nothing hard-coded,
+Point 1's last clauses are the ones people miss. The agent can read both the
+inputs and the expected output, so the cheapest route to a green suite is to
+special-case the fixture — passing tests, zero migration. Nearly as cheap:
+open the captured output and copy it to stdout, which hard-codes nothing, so
+the prohibition has to cover build time as well or a generated header is the
+next loophole. Cheapest of all is a binary that shells out to the Ada one:
 every case green, nothing migrated.
 
 > **Checkpoint.** `SKILL.md` should be roughly a page. If it is three, the
@@ -303,8 +341,10 @@ Port the Ada program in this repo to C++.
 Watch for the skill loading before any code is written.
 
 - It fired → your description matches how people actually ask.
-- It did not → fix the **description**, not the prompt. Rewrite it in the
-  words of the request, then start another new conversation and retry.
+- It did not → the **description** is the first thing to debug, not the
+  prompt. Invocation is the model judging relevance, not a string match, so
+  one miss is evidence rather than proof; rewrite the description in the
+  words of the request, then retry in another new conversation.
 
 You can always invoke it by hand with `/ada-to-cpp-migration`. Nobody will —
 which is the point. A skill with a weak description effectively does not
@@ -397,7 +437,7 @@ answers**.
 | --- | --- | --- |
 | `package P` / child `P.C` | `namespace p` / `p::c`, header per spec | — |
 | package spec / body | `.hpp` / `.cpp` | private part of the spec is not public |
-| `type T is range 1 .. 99` | wrapper with a checked constructor | a bare `int` silently drops the constraint |
+| `type T is range 1 .. 99` | keep the constraint at every construction and conversion boundary: a checked wrapper, or an integer with explicit checks where values enter | a bare `int` silently drops the constraint — including on *results*, not just on input |
 | `delta 0.1 digits 6` (decimal fixed point) | scaled integer (`int tenths`) | **never `double`** — decimal rounding differs |
 | `mod` / `rem` | `%` is `rem`; `mod` differs for negatives | wrong sign, only on negative inputs |
 | `Integer'Image (N)` | manual formatting | leading blank for non-negative values |
@@ -424,8 +464,10 @@ Spec
 [ ] every entity exported by the .ads exists in the header
 [ ] nothing private to the body leaked into the header
 [ ] every exception the package can raise is declared and reachable
-[ ] every subtype constraint whose enforcement point is in this package has
-    an explicit check with the same observable effect
+[ ] every subtype constraint whose enforcement point is in this package is
+    preserved at each construction and conversion boundary — checked wrapper
+    or explicit check, either is fine — including on computed results, not
+    only on parsed input
 [ ] constraints enforced only by a not-yet-translated package are recorded
     as deferred obligations, and closed before the closure gate
 
@@ -445,7 +487,9 @@ Build and test
     parity suite is green
 [ ] no golden file, original source or test was modified
 [ ] no fixture name, expected output or test-specific branch in the migrated
-    sources, and nothing that invokes, links to or wraps the Ada program
+    sources, nothing that reads or generates from the captured output at
+    build or run time, and nothing that invokes, links to or wraps the Ada
+    program
 
 Review
 [ ] the C++ can be diffed against the Ada unit by name

@@ -32,7 +32,7 @@ def standalone_source() -> str:
 
 @pytest.fixture(scope="module")
 def standalone(standalone_source: str) -> str:
-    return build_lab.render(standalone_source, "standalone.md")
+    return build_lab.render(standalone_source, "standalone.md", interactive=False)
 
 
 def test_committed_page_is_up_to_date() -> None:
@@ -149,11 +149,19 @@ def test_lab_teaches_enforced_as_well_as_prose_gates(page: str) -> None:
     assert "Write(golden/**)" in page
 
 
-def test_standalone_page_is_offline_self_contained(standalone: str) -> None:
-    assert not re.search(r"<script[^>]+\bsrc=", standalone)
+def test_standalone_page_runs_none_of_our_code(standalone: str) -> None:
+    """Its whole premise is that nothing of ours executes on their machine.
+
+    A copy button is JavaScript we wrote running in their browser, which the
+    security review it exists to satisfy would read as exactly that.
+    """
+    assert "<script" not in standalone
+    assert "onclick" not in standalone
+    assert "<button" not in standalone
+    assert "github.com" not in standalone
     assert "<link" not in standalone
     assert not re.search(r"<img[^>]+\bsrc=\"https?:", standalone)
-    assert "<style>" in standalone and "<script>" in standalone
+    assert "<style>" in standalone
 
 
 def test_standalone_page_needs_nothing_of_ours(standalone_source: str) -> None:
@@ -178,10 +186,52 @@ def test_standalone_page_carries_the_reference_material(standalone: str) -> None
 def test_standalone_page_teaches_the_same_gates(standalone: str) -> None:
     assert "/ada-to-cpp-migration" in standalone
     assert "@ada-to-cpp-migration" not in standalone
-    assert "shelling out to the Ada program" in standalone
     assert "permissions:" in standalone
     assert "tool-level guardrail" in standalone
-    assert standalone.count('class="copy"') >= 7
+    assert standalone.count('class="prompt"') >= 7
+
+
+def test_standalone_no_build_track_does_not_contradict_the_skill() -> None:
+    """Without a build there is no trusted reference output, so a correct
+    skill stops. A fallback that has attendees migrate anyway teaches them to
+    ignore the precondition they just wrote.
+    """
+    source = (build_lab.ROOT / "src" / "standalone.md").read_text(encoding="utf-8")
+    track = source.split("## 4.")[1].split("## 5.")[0]
+    assert "refuse to start" in track
+    assert "unverified draft" in track
+
+
+# One semantic prohibition per entry, phrased differently in each document —
+# match the meaning, not the sentence. The runtime-golden-read gate reached
+# only one of the three documents before this test existed.
+GATE_SENTINELS = {
+    "no reading the goldens": r"at build (?:time or run time|or run time)",
+    "no delegating to Ada": r"shelling out to the Ada program",
+    "no weakening tests": r"weaken, skip",
+    "no floating point": r"to floating point|to a floating point type",
+    "no dropped checks": r"run-time constraint check",
+    "closure debugging only": r"only work allowed|only permitted work",
+    "no completion while red": r"fails or\s+(?:was|any case has been)\s+skipped",
+}
+
+
+@pytest.mark.parametrize("name,pattern", sorted(GATE_SENTINELS.items()))
+@pytest.mark.parametrize("document", ["lab.md", "standalone.md"])
+def test_both_editions_teach_the_same_gates(
+    document: str, name: str, pattern: str
+) -> None:
+    text = (build_lab.ROOT / "src" / document).read_text(encoding="utf-8")
+    assert re.search(pattern, text), f"{document} is missing: {name}"
+
+
+@pytest.mark.parametrize("name,pattern", sorted(GATE_SENTINELS.items()))
+def test_answer_key_teaches_the_same_gates(name: str, pattern: str) -> None:
+    """Solution branch only; elsewhere the file is deliberately absent."""
+    skill = ROOT / "solution" / "ada-to-cpp-migration" / "SKILL.md"
+    if not skill.exists():
+        pytest.skip("answer key lives on the solution branch")
+    assert re.search(pattern, skill.read_text(encoding="utf-8")), name
 
 
 def test_answer_key_is_not_on_this_branch() -> None:

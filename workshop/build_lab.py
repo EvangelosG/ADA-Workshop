@@ -2,11 +2,12 @@
 """Render the workshop's markdown sources into self-contained HTML pages.
 
 Each output is a single HTML file with no external requests, so it works from
-a file:// URL on a laptop with no network. Prompt blocks (```prompt) get a
-copy button.
+a file:// URL on a laptop with no network.
 
-    lab.md         the repo-based lab
-    standalone.md  the backup page for rooms that cannot clone or run our code
+    lab.md         the repo-based lab; prompt blocks get a copy button
+    standalone.md  the backup page for rooms that cannot clone or run our
+                   code, rendered with no JavaScript at all: a page that
+                   executes our script is our code running on their laptop
 
     pip install markdown
     python3 workshop/build_lab.py
@@ -26,10 +27,10 @@ ROOT = Path(__file__).resolve().parent
 SOURCE = ROOT / "src" / "lab.md"
 OUTPUT = ROOT / "lab.html"
 
-# (markdown source, generated page)
+# (markdown source, generated page, may run JavaScript)
 PAGES = [
-    (SOURCE, OUTPUT),
-    (ROOT / "src" / "standalone.md", ROOT / "standalone.html"),
+    (SOURCE, OUTPUT, True),
+    (ROOT / "src" / "standalone.md", ROOT / "standalone.html", False),
 ]
 
 STYLE = """
@@ -196,29 +197,39 @@ PAGE = """<!DOCTYPE html>
 <main>
 {body}
 <footer>
-Generated from <code>workshop/src/{source_name}</code> by
-<code>workshop/build_lab.py</code> — edit the markdown, not this file.
-Repo: <a href="https://github.com/EvangelosG/ADA-Workshop">github.com/EvangelosG/ADA-Workshop</a>
+{footer}
 </footer>
 </main>
-<script>{script}</script>
-</body>
+{script}</body>
 </html>
 """
+
+FOOTER_REPO = """Generated from <code>workshop/src/{source_name}</code> by
+<code>workshop/build_lab.py</code> — edit the markdown, not this file.
+Repo: <a href="https://github.com/EvangelosG/ADA-Workshop">github.com/EvangelosG/ADA-Workshop</a>"""
+
+# No repo link and no script: this page is handed to rooms that may not fetch
+# or execute anything of ours.
+FOOTER_PLAIN = """Ada&rarr;C++ migration skill workshop — standalone edition.
+This page contains no scripts and makes no network requests; select and copy
+the prompt blocks by hand."""
 
 PROMPT_BLOCK = re.compile(
     r'<pre><code class="language-prompt">(.*?)</code></pre>', re.DOTALL
 )
 
 
-def wrap_prompts(body: str) -> str:
-    """Give every ```prompt block a labelled frame and a copy button."""
+def wrap_prompts(body: str, interactive: bool) -> str:
+    """Give every ```prompt block a labelled frame, and a copy button if allowed."""
 
     def replace(match: re.Match[str]) -> str:
+        button = (
+            '<button class="copy" type="button">Copy</button>' if interactive else ""
+        )
         return (
             '<div class="prompt">'
             '<div class="prompt-bar"><span>Paste into Devin Desktop</span>'
-            '<button class="copy" type="button">Copy</button></div>'
+            f"{button}</div>"
             f"<pre><code>{match.group(1)}</code></pre>"
             "</div>"
         )
@@ -226,12 +237,14 @@ def wrap_prompts(body: str) -> str:
     return PROMPT_BLOCK.sub(replace, body)
 
 
-def render(source_text: str, source_name: str = "lab.md") -> str:
+def render(
+    source_text: str, source_name: str = "lab.md", interactive: bool = True
+) -> str:
     converter = markdown.Markdown(
         extensions=["extra", "sane_lists", "toc"],
         extension_configs={"toc": {"permalink": False}},
     )
-    body = wrap_prompts(converter.convert(source_text))
+    body = wrap_prompts(converter.convert(source_text), interactive)
     title = "Build an Ada→C++ migration skill"
     match = re.search(r"^#\s+(.+)$", source_text, re.MULTILINE)
     if match:
@@ -239,9 +252,13 @@ def render(source_text: str, source_name: str = "lab.md") -> str:
     return PAGE.format(
         title=html.escape(title),
         style=STYLE,
-        script=SCRIPT,
+        script=f"<script>{SCRIPT}</script>\n" if interactive else "",
         body=body,
-        source_name=source_name,
+        footer=(
+            FOOTER_REPO.format(source_name=source_name)
+            if interactive
+            else FOOTER_PLAIN
+        ),
     )
 
 
@@ -255,8 +272,10 @@ def main() -> int:
     args = parser.parse_args()
 
     stale = False
-    for source, output in PAGES:
-        rendered = render(source.read_text(encoding="utf-8"), source.name)
+    for source, output, interactive in PAGES:
+        rendered = render(
+            source.read_text(encoding="utf-8"), source.name, interactive
+        )
 
         if args.check:
             current = output.read_text(encoding="utf-8") if output.exists() else ""

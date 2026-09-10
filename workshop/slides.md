@@ -211,6 +211,7 @@ Gates, worded with no escape hatch:
 - never translate a fixed point or integer type to floating point
 - never drop a run-time constraint check
 - never hard-code fixtures or expected output into the program
+- never read or generate from `golden/` at build or run time
 - never wrap, link to or shell out to the Ada program to pass a case
 - if it cannot be translated faithfully — **stop and report**
 
@@ -231,7 +232,7 @@ Split it by scope:
 | --- | --- |
 | after each package | builds clean · nothing that passed now fails |
 | dependency closure complete | fixing red cases is the *only* work allowed |
-| completion | never report done while any case fails |
+| completion | never report done while any case fails or was skipped |
 
 You find this by **running** the skill, not by reading it.
 
@@ -247,7 +248,7 @@ A prohibition is checkable — by the model, and by you in review.
 | Decoration | Gate |
 | --- | --- |
 | "Prefer not to modify golden files" | "Never edit anything in `golden/`" |
-| "Try to keep tests passing" | "Never report done while any parity case fails" |
+| "Try to keep tests passing" | "Never report done while any parity case fails or was skipped" |
 | "Be careful with numeric types" | "Never translate fixed point to `double`" |
 
 </div>
