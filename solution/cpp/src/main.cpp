@@ -38,7 +38,9 @@ std::vector<alerts::Rule> make_rules() {
 std::vector<Reading> load(const std::string& path) {
   std::ifstream file(path);
   if (!file) {
-    throw InvalidReading("cannot open " + path);
+    // Ada.Text_IO.Open raises Name_Error, which the top level handler reports
+    // by name rather than as a rejected input.
+    throw NameError();
   }
 
   std::vector<Reading> data;
@@ -115,6 +117,9 @@ int main(int argc, char** argv) {
     report(load(argv[1]));
   } catch (const InvalidReading& error) {
     std::cerr << "rejected: " << error.what() << "\n";
+    return 2;
+  } catch (const AdaError& error) {
+    std::cerr << "failed: " << error.ada_name() << "\n";
     return 2;
   } catch (const std::exception&) {
     std::cerr << "failed: " << "unexpected error" << "\n";

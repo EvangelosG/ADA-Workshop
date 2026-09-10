@@ -20,7 +20,7 @@ wrong answer.
 
 | Ada | C++ |
 | --- | --- |
-| `type T is range 1 .. 99` | `using T = int` plus an explicit range check where values enter the system |
+| `type T is range 1 .. 99` | `using T = int` plus an explicit range check at every point a value of the type is produced — input, arithmetic results, conversions |
 | `subtype S is T range A .. B` | same; the check does not come for free |
 | enumeration type | `enum class` |
 | `type R is record ... end record` | `struct` |

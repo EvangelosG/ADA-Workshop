@@ -9,7 +9,8 @@ Work through this before reporting a package as migrated.
 - [ ] Every exception the package can raise is declared and reachable.
 - [ ] Every subtype constraint whose enforcement point lives in this package
       has an explicit check with the same observable effect as the Ada
-      run-time check.
+      run-time check, applied wherever a value of the type is produced:
+      results of arithmetic and conversions as well as parsed input.
 - [ ] Constraints enforced only where a not-yet-translated package uses them
       are written down as deferred obligations, and closed before the
       dependency-closure gate.
@@ -35,8 +36,9 @@ Work through this before reporting a package as migrated.
       whole parity suite is green.
 - [ ] No golden file, Ada source, or test was modified.
 - [ ] No fixture name, expected output or test-specific branch appears in the
-      migrated sources, and nothing in them invokes, links to or wraps the
-      Ada program.
+      migrated sources, nothing reads or generates code from `golden/` at
+      build time or run time, and nothing invokes, links to or wraps the Ada
+      program.
 
 ## Review
 

@@ -89,17 +89,19 @@ These are not suggestions. Violating one means the migration is unverified.
   complete dependency closure with a red suite (see "Gates by stage").
 - **Never make the program aware that it is under test.** No hard-coded
   expected output, no fixture filenames, no branch that behaves differently
-  for `readings.csv`, no reading of `golden/` at run time. A green suite
-  obtained this way is worse than a red one, because it hides the gap.
+  for `readings.csv`, and no reading of, embedding of or code generation
+  from `golden/` at build time or run time. A green suite obtained this way
+  is worse than a red one, because it hides the gap.
 - **Never delegate the behaviour to the reference implementation.** The C++
   must implement the logic itself: no invoking, embedding, linking to or
   shelling out to the Ada program or any other compatibility layer. A shim
   passes every parity case and migrates nothing.
-- **Never introduce floating point** where the Ada used a fixed point or
-  integer type. See the fixed point entry in `reference/idiom-map.md`.
-- **Never drop a run-time check.** An Ada subtype constraint that raises
-  `Constraint_Error` must have an explicit C++ counterpart that produces the
-  same observable behaviour.
+- **Never translate a fixed point or integer type to floating point.** See
+  the fixed point entry in `reference/idiom-map.md`.
+- **Never drop a run-time constraint check.** An Ada subtype constraint that
+  raises `Constraint_Error` must have an explicit C++ counterpart with the
+  same observable behaviour, enforced everywhere a value of that type is
+  produced — results of arithmetic and conversions, not only parsed input.
 - If a construct cannot be translated faithfully, **stop and report it** with
   the Ada source location. Do not approximate silently.
 
